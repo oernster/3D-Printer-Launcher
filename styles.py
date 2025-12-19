@@ -172,8 +172,11 @@ def build_styles(theme: str = "dark") -> str:
 
     /* Menus */
     QMenuBar {{ background: {t["bg"]}; color: {t["text"]}; }}
+    QMenuBar::item {{ padding: 4px 14px; }}
     QMenuBar::item:selected {{ background: {t["btn_hover"]}; border-radius: 6px; }}
+
     QMenu {{ background: {t["panel"]}; color: {t["text"]}; border: 1px solid {t["border"]}; }}
+    QMenu::item {{ padding: 4px 18px; min-width: 150px; }}
     QMenu::item:selected {{ background: {t["btn_hover"]}; }}
 
     /* Scroll area that holds the cards */
