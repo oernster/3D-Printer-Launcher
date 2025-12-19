@@ -35,7 +35,7 @@ def ssh_command(ip, username, password, command):
 # User settings
 ip_address = "192.168.1.120"
 username = "root"
-password = "Crust:2024"  # Replace with your actual password
+password = "Insert your password here"  # Replace with your actual password
 
 # Commands to execute
 commands = "sudo service webcamd restart"
