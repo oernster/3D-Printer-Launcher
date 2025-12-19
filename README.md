@@ -10,7 +10,7 @@
 
 If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
-[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
 Small Windows launcher for my 3D‑printer helper tools:
 
@@ -97,7 +97,7 @@ configure the correct IP/URL once before using them.
 
 If you want to customise which sensors are shown, add new sensors, or set up a
 new dashboard folder for another printer, see
-[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1) for detailed Python and
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md) for detailed Python and
 HTML/JavaScript examples.
 
 ### 4.1 Qidi temps (Klipper / Moonraker)
