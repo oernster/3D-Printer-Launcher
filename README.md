@@ -8,6 +8,10 @@
 
 <img width="1009" height="763" alt="{627EC487-3B61-44B9-9FEB-AF2AFF46B02A}" src="https://github.com/user-attachments/assets/7a16914d-b442-486f-b916-08666e109e2f" />
 
+If you want to change which sensors are shown or set up a new dashboard for a
+different printer, see the setup guide at the repo root:
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
+
 Small Windows launcher for my 3D‑printer helper tools:
 
 - Qidi temperature dashboard (Flask web UI)
