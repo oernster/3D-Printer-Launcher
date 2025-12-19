@@ -35,7 +35,7 @@ def ssh_command(ip, username, password, command):
 # User settings
 ip_address = "192.168.1.120"
 username = "root"
-password = "Insert your password here"  # Replace with your actual password
+password = "Insert your password here; for Qidi Q1 pro's this is typically makerbase"  # Replace with your actual password
 
 # Commands to execute
 commands = "sudo service webcamd restart"
