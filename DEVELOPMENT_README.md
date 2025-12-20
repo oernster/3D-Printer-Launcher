@@ -61,6 +61,9 @@ These instructions assume Windows 10/11 and PowerShell.
    pip install nuitka ordered-set zstandard
    ```
 
+The dashboards are Flask apps served by a production WSGI server (Waitress), so
+there is no Flask development server involved at runtime.
+
 Nuitka may require Microsoft C++ Build Tools (MSVC) to be installed. If Nuitka
 complains about missing compilers, install the “Desktop development with C++”
 workload via Visual Studio or the standalone Build Tools.
@@ -77,6 +80,10 @@ python main.py
 The launcher window should appear and you can start/stop the three tools from
 there. Logs are written to `launcher_*.log` files in each tool’s project
 directory by [`AppRunner._log()`](runner_widget.py:156).
+
+On Windows, Stop escalates to a hard kill quickly to ensure the dashboard port
+is actually released (so you don’t end up with a “stopped” card while the web
+server is still listening): [`AppRunner.stop()`](runner_widget.py:160).
 
 
 ## 4. Building a single‑file executable with Nuitka

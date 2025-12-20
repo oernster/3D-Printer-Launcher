@@ -28,6 +28,9 @@ All dashboards follow the same pattern:
 3. The HTML/JS overlay (`index.html`) fetches those endpoints with `fetch()`
    and updates the DOM.
 
+The dashboard web pages themselves are served locally by a production WSGI
+server (Waitress) rather than Flask’s development server.
+
 When you add or rename a sensor, you must keep **Python JSON keys** and
 **JavaScript lookups** in sync.
 
@@ -338,9 +341,9 @@ If you want a completely separate overlay (e.g. for a second Voron):
    ```
 
 2. Adjust the backend:
-   - Rename the Flask app/module if desired.
-   - Update `MOONRAKER_API_URL` or `config.json` / `--moonraker-url` settings
-     to point at the new printer.
+    - Rename the Flask app/module if desired.
+    - Update `MOONRAKER_API_URL` or `config.json` / `--moonraker-url` settings
+      to point at the new printer.
    - Tweak `temperature_sensors` / `temperature_sensor_variables` (Voron) or
      `temperature_sensors` (Qidi) as described above.
 
@@ -357,8 +360,15 @@ dashboard folders just to add another Klipper printer. Instead you can:
 
 1. Reuse the existing `VoronTemps/` backend and HTML.
 2. Open the launcher and use **Manage printers / tools** to add a new entry
-   pointing at `VoronTemps/app.py` with a different label, Moonraker host, API
-   port and dashboard port.
+    pointing at `VoronTemps/app.py` with a different label, Moonraker host, API
+    port and dashboard port.
+
+### Notes / common pitfalls
+
+- The overlay URLs you put into your browser/OBS are **HTTP**, e.g.
+  `http://127.0.0.1:5001/` (not `https://`).
+- If a dashboard shows “live” values even after you press Stop in the launcher,
+  it means a process is still bound to that local port.
 
 Only create a new dashboard folder when the HTML or the set of sensors for a
 printer is fundamentally different from the existing dashboards (for example if

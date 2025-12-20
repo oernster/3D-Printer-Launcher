@@ -14,8 +14,8 @@ different printer, see the setup guide at the repo root:
 
 Small Windows launcher for my 3D‑printer helper tools:
 
-- Qidi temperature dashboard (Flask web UI)
-- Voron/Generic Klipper temperature dashboard (Flask web UI)
+- Qidi temperature dashboard (Flask app served by Waitress WSGI)
+- Voron/Generic Klipper temperature dashboard (Flask app served by Waitress WSGI)
 - Qidi `webcamd` SSH restart helper
 
 The launcher is a single windowed app (PySide6/Qt) that starts each tool in its
@@ -120,9 +120,9 @@ UI.
    - **Moonraker IP/host** – just the hostname or IP of the printer running
      Moonraker (e.g. `192.168.1.226`).
    - **Moonraker API port** – TCP port where Moonraker listens (default `7125`).
-   - **Dashboard port** – local Flask UI port (e.g. `5000`, `5001`, `5002`);
-     use a different value per printer if you want multiple dashboards at the
-     same time.
+    - **Dashboard port** – local dashboard UI port (e.g. `5000`, `5001`, `5002`);
+      use a different value per printer if you want multiple dashboards at the
+      same time.
    - **Kind** – `normal` for regular tools, `oneshot` for one‑shot helpers
      (this hides the Stop button and shows a single Run action).
    - **Webcam password** – only relevant for the Qidi Webcam restart tool; this
@@ -155,7 +155,7 @@ Each card shows:
 - Buttons:
   - **Start / Run** – launches the script in the shared `venv` using
     [`QProcess`](runner_widget.py:29)
-  - **Stop** – sends a polite terminate, then a kill if needed
+  - **Stop** – sends a polite terminate, then escalates to a kill quickly if needed
   - **Open log** – opens the latest log file created via
     [`AppSpec.log_path`](app_spec.py:82)
   - **Open folder** – opens the underlying project directory in your file
@@ -181,11 +181,15 @@ within the log view so they never run off the side of the window.
 The dashboards are designed to be embedded directly into OBS via **Browser
 Source** elements. You can add one source per printer.
 
-By default the launcher uses these local dashboard ports (which you can change
-per printer in the Manage dialog):
+The dashboards are plain HTTP web pages served locally.
 
-- Qidi temps: `http://127.0.0.1:5001/`
-- Voron/Klipper temps (first printer): `http://127.0.0.1:5000/`
+- Always use **`http://`** URLs (not `https://`).
+- Each enabled printer/tool must have a **unique** local **Dashboard port**.
+
+By default the repository config maps like:
+
+- Qidi temps: `http://127.0.0.1:5000/`
+- Voron/Klipper temps (first printer): `http://127.0.0.1:5001/`
 - Additional printers: whatever **Dashboard port** you configured.
 
 ### 6.1 Qidi temperature overlay
