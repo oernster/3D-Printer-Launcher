@@ -15,6 +15,8 @@ the launcher executable themselves. End‑users can simply download the latest
 - Shared styling: [`styles.py`](styles.py:1)
 - Nuitka build helper script: [`build_nuitka.py`](build_nuitka.py:1)
 - Windows build convenience wrapper: [`build_nuitka.cmd`](build_nuitka.cmd:1)
+- Unix/macOS build scripts: [`build_nuitka_unix.sh`](build_nuitka_unix.sh:1), [`build_nuitka_macos.sh`](build_nuitka_macos.sh:1)
+- Linux distro-specific wrappers: [`build_nuitka_debian.sh`](build_nuitka_debian.sh:1), [`build_nuitka_arch.sh`](build_nuitka_arch.sh:1), [`build_nuitka_fedora.sh`](build_nuitka_fedora.sh:1), [`build_nuitka_rhel.sh`](build_nuitka_rhel.sh:1), [`build_nuitka_void.sh`](build_nuitka_void.sh:1)
 
 At runtime `main.build_specs()` in [`main.py`](main.py:13) declares which tools
 are available:
@@ -28,7 +30,7 @@ The base directory detection and log‑file naming live in
 [`AppSpec`](app_spec.py:59).
 
 
-## 2. Development environment setup
+## 2. Development environment setup (Windows)
 
 These instructions assume Windows 10/11 and PowerShell.
 
@@ -75,11 +77,7 @@ directory by [`AppRunner._log()`](runner_widget.py:156).
 
 ## 4. Building a single‑file executable with Nuitka
 
-You can build the Windows `.exe` either via the Python helper script
-[`build_nuitka.main()`](build_nuitka.py:7) or the batch file
-[`build_nuitka.cmd`](build_nuitka.cmd:1).
-
-### 4.1 Using the Python helper (recommended)
+### 4.1 Windows (Python helper – recommended)
 
 From the project root, with your `venv` activated:
 
@@ -101,7 +99,7 @@ python build_nuitka.py
 
 On success you will get `dist\main.exe`.
 
-### 4.2 Using the batch file
+### 4.2 Windows (batch file)
 
 Alternatively, you can call the batch script directly from a normal (non‑venv)
 Command Prompt, as long as `python` resolves to a Python interpreter that has
@@ -114,6 +112,42 @@ build_nuitka.cmd
 This runs the same Nuitka command as in section 4.1 and also produces
 `dist\main.exe`.
 
+### 4.3 macOS and generic Unix
+
+For macOS and Unix-like systems, the recommended entry point is the generic
+shell script [`build_nuitka_unix.sh`](build_nuitka_unix.sh:1). It uses the same
+Nuitka options as the Windows scripts but omits the Windows-only console flag.
+By default it runs `python3`, but you can override that via `PYTHON_BIN`.
+
+Example (from the repo root, with a virtualenv already prepared):
+
+```bash
+./build_nuitka_unix.sh
+```
+
+or explicitly:
+
+```bash
+PYTHON_BIN=./venv/bin/python ./build_nuitka_unix.sh
+```
+
+There are also small convenience wrappers for specific platforms and
+distributions:
+
+- macOS: [`build_nuitka_macos.sh`](build_nuitka_macos.sh:1)
+- Debian / Ubuntu / Mint: [`build_nuitka_debian.sh`](build_nuitka_debian.sh:1)
+- Arch / Manjaro: [`build_nuitka_arch.sh`](build_nuitka_arch.sh:1)
+- Fedora: [`build_nuitka_fedora.sh`](build_nuitka_fedora.sh:1)
+- RHEL / CentOS / Rocky / AlmaLinux: [`build_nuitka_rhel.sh`](build_nuitka_rhel.sh:1)
+- Void Linux: [`build_nuitka_void.sh`](build_nuitka_void.sh:1)
+
+All of these wrappers simply invoke
+[`build_nuitka_unix.sh`](build_nuitka_unix.sh:1) after providing comments on the
+typical package installation commands for that platform.
+
+On success you will get `dist/main` (an ELF or Mach‑O binary depending on the
+host OS).
+
 
 ## 5. Expected folder layout for releases
 
@@ -125,7 +159,7 @@ running as a Nuitka onefile executable, the launcher:
    three tool folders `qidi-temps/`, `qidiwebcamdrestart/` and `VoronTemps/`.
 3. Picks the first directory that contains all three.
 
-Two layouts are therefore supported out‑of‑the‑box:
+Two layouts are therefore supported out‑of‑the-box:
 
 1. **Development / repo layout** (what you have in Git):
 
@@ -186,7 +220,7 @@ If you add tools that have different dependency sets from the existing ones,
 consider either:
 
 - Keeping a single, larger `venv` that satisfies all tools, or
-- Teaching [`AppSpec`](app_spec.py:59) to point at per‑tool virtualenvs and
+- Teaching [`AppSpec`](app_spec.py:59) to point at per-tool virtualenvs and
   adjusting [`AppRunner.start()`](runner_widget.py:109) accordingly.
 
 
