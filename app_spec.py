@@ -74,10 +74,34 @@ class AppSpec:
     def venv_python(self) -> Path:
         """Single shared virtualenv in the project root.
 
-        On Windows this is `<repo>/venv/Scripts/python.exe`.
+        This project launches the bundled tools (Flask dashboards, helpers)
+        using a Python interpreter from a *shared* venv at `<repo>/venv`.
+
+        Platform paths:
+        - Windows: `<repo>/venv/Scripts/python.exe`
+        - Linux/macOS: `<repo>/venv/bin/python` (or `python3`)
+
+        We probe common locations and return the first one that exists so the
+        launcher works across OSes and with different venv layouts.
         """
 
-        return BASE_DIR / "venv" / "Scripts" / "python.exe"
+        candidates: list[Path] = [
+            # POSIX venv layout
+            BASE_DIR / "venv" / "bin" / "python3",
+            BASE_DIR / "venv" / "bin" / "python",
+            # Windows venv layout
+            BASE_DIR / "venv" / "Scripts" / "python.exe",
+        ]
+
+        for p in candidates:
+            if p.exists():
+                return p
+
+        # Return the most likely path for the current platform to produce a
+        # helpful error message when validation fails.
+        if sys.platform.startswith("win"):
+            return BASE_DIR / "venv" / "Scripts" / "python.exe"
+        return BASE_DIR / "venv" / "bin" / "python"
 
     @property
     def script_path(self) -> Path:

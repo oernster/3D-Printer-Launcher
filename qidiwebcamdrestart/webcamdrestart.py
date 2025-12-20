@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import paramiko
@@ -16,13 +17,22 @@ def _load_password() -> str:
     are never committed to Git.
     """
 
+    # Allow overriding via environment variable so packaged builds can be used
+    # without writing a credentials file to disk.
+    env_pw = os.environ.get("QIDI_WEBCAMD_PASSWORD")
+    if isinstance(env_pw, str) and env_pw.strip():
+        return env_pw.strip()
+
     cfg_path = Path(__file__).with_name("credentials.json")
     try:
         raw = cfg_path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
+        example_path = Path(__file__).with_name("credentials.example.json")
         raise RuntimeError(
             f"Missing credentials file: {cfg_path}. "
-            "Create it with e.g. {\"password\": \"makerbase\"}."
+            "Create it (or copy the example) with e.g. {\"password\": \"makerbase\"}. "
+            f"Example file: {example_path}. "
+            "Alternatively, set environment variable QIDI_WEBCAMD_PASSWORD."
         ) from exc
 
     try:
