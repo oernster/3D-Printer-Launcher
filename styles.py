@@ -55,6 +55,12 @@ def build_styles(theme: str = "dark") -> str:
     QMainWindow {{ background: {t["bg"]}; }}
     QWidget#Root {{ background: {t["bg"]}; }}
 
+    /* Dialogs (e.g. Manage printers/tools) */
+    QDialog {{
+        background: {t["panel"]};
+        color: {t["text"]};
+    }}
+
     /* Panels (explicit so light mode is actually light) */
     QWidget#LeftPanel, QWidget#RightPanel {{
         background: {t["panel"]};

@@ -16,6 +16,7 @@ python -m nuitka ^
   --onefile ^
   --enable-plugin=pyside6 ^
   --windows-console-mode=disable ^
+  --windows-icon-from-ico=filament.ico ^
   --follow-imports ^
   --output-dir=dist ^
   main.py

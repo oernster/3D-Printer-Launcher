@@ -29,6 +29,9 @@ def main() -> None:
         "--onefile",
         "--enable-plugin=pyside6",
         "--windows-console-mode=disable",
+        # Use the filament.ico as the application icon for the Windows
+        # executable so the taskbar and shortcuts show a custom icon.
+        "--windows-icon-from-ico=filament.ico",
         "--follow-imports",
         "--output-dir=dist",
         "main.py",
