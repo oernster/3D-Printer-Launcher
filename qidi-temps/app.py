@@ -3,6 +3,7 @@ import aiohttp
 import asyncio
 import logging
 import os
+import argparse
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
@@ -175,6 +176,31 @@ def create_app(config: Dict[str, Any] = None) -> PrinterDashboardApp:
 
 # Main application entry point
 if __name__ == "__main__":
+    # Allow the launcher (and manual runs) to override host/port via CLI,
+    # while keeping environment variables as sensible defaults. This brings
+    # Qidi in line with the Voron dashboard so both obey the "--port" passed
+    # by the launcher.
+
+    parser = argparse.ArgumentParser(description="Qidi printer temperature dashboard")
+    parser.add_argument(
+        "--host",
+        default=os.environ.get("HOST", "127.0.0.1"),
+        help="Host interface for the Flask server (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", "5001")),
+        help="Port for the Flask server (default: 5001)",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable Flask debug mode",
+    )
+
+    args = parser.parse_args()
+
     # Configuration
     config = {
         "api_url": os.environ.get(
@@ -184,14 +210,14 @@ if __name__ == "__main__":
         "timeout": int(os.environ.get("API_TIMEOUT", "10"))
     }
     
-    # Debug level from environment
-    if os.environ.get("DEBUG", "").lower() in ("1", "true", "yes"):
+    # Debug level from environment or CLI
+    if args.debug or os.environ.get("DEBUG", "").lower() in ("1", "true", "yes"):
         logger.setLevel(logging.DEBUG)
     
     # Create and run the application
     app = create_app(config)
     app.run(
-        host=os.environ.get("HOST", "127.0.0.1"),
-        port=int(os.environ.get("PORT", "5001")),
-        debug=os.environ.get("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
+        host=args.host,
+        port=args.port,
+        debug=args.debug or os.environ.get("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
     )

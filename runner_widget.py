@@ -131,10 +131,14 @@ class AppRunner(QWidget):
         self.proc.setArguments(args)
 
         # ✅ Force UTF-8 for child process stdout/stderr on Windows and inject
-        # optional Moonraker URL for Klipper printers.
+        # optional Moonraker URL for Klipper printers. Also pass the launcher
+        # label so dashboards can show which printer they belong to.
         env = self.proc.processEnvironment()
         env.insert("PYTHONUTF8", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
+        # Used by dashboard apps (e.g. VoronTemps, Qidi temps) to display a
+        # human‑friendly printer name in the HTML.
+        env.insert("LAUNCHER_TOOL_LABEL", self.spec.name)
         url = getattr(self.spec, "moonraker_url", None)
         if url:
             env.insert("MOONRAKER_API_URL", url)

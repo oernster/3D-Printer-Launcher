@@ -132,6 +132,16 @@
 <body>
 
   <div class="dashboard">
+    <!-- Optional per-instance label injected by the launcher so multiple
+         dashboards (Voron 1, Voron 2, etc.) can be distinguished even
+         though they share the same codebase. Also show the Moonraker
+         backend host so each OBS source is clearly tied to its printer. -->
+    {% if printer_label or moonraker_host %}
+    <div class="sensor" style="grid-column: 1 / span 3; text-align: center; font-weight: bold;">
+      {% if printer_label %}{{ printer_label }}{% else %}Voron{% endif %}
+      {% if moonraker_host %}<br><span style="font-weight: normal; font-size: 0.9em; color: #ccc;">{{ moonraker_host }}</span>{% endif %}
+    </div>
+    {% endif %}
     <div id="extruder" class="sensor">
       Extruder:
       <span class="temp-value">--</span>
