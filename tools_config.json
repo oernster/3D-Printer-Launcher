@@ -12,11 +12,11 @@
       "script": "app.py"
     },
     {
-      "enabled": false,
+      "enabled": true,
       "id": "qidi-webcamd-restart",
       "kind": "oneshot",
       "label": "Qidi Webcamd restart",
-      "moonraker_api_port": null,
+      "moonraker_api_port": 7125,
       "moonraker_port": 5000,
       "moonraker_url": "http://192.168.1.120:7125/printer/objects/query",
       "project_dir": "qidiwebcamdrestart",

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+from waitress import serve
 import aiohttp
 import asyncio
 import logging
@@ -151,9 +152,9 @@ class PrinterDashboardApp:
         def index():
             return render_template('index.html')
     
-    def run(self, host: str = "127.0.0.1", port: int = 5001, debug: bool = False):
-        """Run the Flask application"""
-        self.app.run(host=host, port=port, debug=debug)
+    def run(self, host: str = "127.0.0.1", port: int = 5001):
+        """Run the Flask application via a production WSGI server (waitress)."""
+        serve(self.app, host=host, port=port, threads=8)
 
 
 def create_app(config: Dict[str, Any] = None) -> PrinterDashboardApp:
@@ -193,11 +194,7 @@ if __name__ == "__main__":
         default=int(os.environ.get("PORT", "5001")),
         help="Port for the Flask server (default: 5001)",
     )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable Flask debug mode",
-    )
+    # Debug flag intentionally removed/ignored for packaged usage.
 
     args = parser.parse_args()
 
@@ -210,14 +207,9 @@ if __name__ == "__main__":
         "timeout": int(os.environ.get("API_TIMEOUT", "10"))
     }
     
-    # Debug level from environment or CLI
-    if args.debug or os.environ.get("DEBUG", "").lower() in ("1", "true", "yes"):
-        logger.setLevel(logging.DEBUG)
+    # Ensure debug logging is disabled in packaged usage.
+    logger.setLevel(logging.INFO)
     
     # Create and run the application
     app = create_app(config)
-    app.run(
-        host=args.host,
-        port=args.port,
-        debug=args.debug or os.environ.get("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
-    )
+    app.run(host=args.host, port=args.port)

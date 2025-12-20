@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+from waitress import serve
 import aiohttp
 import asyncio
 import logging
@@ -9,7 +10,7 @@ from urllib.parse import urlparse
 import argparse
 import sys
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 DEFAULT_MOONRAKER_URL = "http://192.168.1.226:7125/printer/objects/query"
@@ -339,9 +340,11 @@ class PrinterDashboardApp:
                 moonraker_host=moonraker_host,
             )
     
-    def run(self, host="127.0.0.1", port=5000, debug=True, use_reloader=False):
-        """Run the Flask application."""
-        self.app.run(host=host, port=port, debug=debug, use_reloader=use_reloader)
+    def run(self, host="127.0.0.1", port=5000):
+        """Run the Flask application via a production WSGI server (waitress)."""
+        # `threads` keeps async view functions responsive enough for this small
+        # dashboard and avoids Flask's development server.
+        serve(self.app, host=host, port=port, threads=8)
 
 
 # Main application entry point
@@ -368,11 +371,7 @@ if __name__ == "__main__":
         default=5000,
         help="Port for the Flask server (default: 5000)",
     )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable Flask debug mode",
-    )
+    # Debug flag intentionally removed/ignored for packaged usage.
 
     args = parser.parse_args()
 
@@ -390,6 +389,5 @@ if __name__ == "__main__":
         logging.warning("Moonraker probe raised %r – ignoring and starting dashboard anyway.", exc)
 
     app = PrinterDashboardApp(moonraker_url)
-    # Force Flask debug mode on for development so we get full tracebacks and
-    # live reloader-style behaviour while iterating on the dashboard.
-    app.run(host=args.host, port=args.port, debug=True, use_reloader=False)
+    # Run with a production WSGI server.
+    app.run(host=args.host, port=args.port)

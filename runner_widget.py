@@ -164,8 +164,15 @@ class AppRunner(QWidget):
         self._log(f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} STOP requested ====\n")
         self._set_status("Stopping…", kind="warn")
 
+        # On Windows especially, a Python process running a webserver may not
+        # respond promptly to a gentle terminate. To avoid leaving the port
+        # bound (which makes the dashboard appear to still be running), we
+        # escalate to a hard kill quickly.
         self.proc.terminate()
-        QTimer.singleShot(2000, self._kill_if_needed)
+
+        kind = getattr(self.spec, "kind", "normal")
+        kill_delay_ms = 500 if kind != "oneshot" else 2000
+        QTimer.singleShot(kill_delay_ms, self._kill_if_needed)
         self._refresh_buttons()
 
     def _kill_if_needed(self) -> None:
@@ -194,6 +201,12 @@ class AppRunner(QWidget):
 
     def _on_started(self) -> None:
         self._set_status("Running", kind="ok")
+        try:
+            pid = int(self.proc.processId())
+        except Exception:
+            pid = 0
+        if pid:
+            self._log(f"[launcher] PID: {pid}\n")
         self._refresh_buttons()
 
     def _on_finished(self, exit_code: int, _exit_status) -> None:
