@@ -19,17 +19,19 @@ from PySide6.QtWidgets import (
 )
 
 from app_spec import AppSpec, BASE_DIR
+from config import load_tools_config
 from runner_widget import AppRunner
+from manage_tools_dialog import ManageToolsDialog
 from styles import build_styles
 
 
 class MainWindow(QMainWindow):
     def __init__(self, specs: list[AppSpec]):
         super().__init__()
-        self.setWindowTitle("Oliver’s App Launcher")
-        # Slightly more compact default height (roughly 2/3 of the previous
-        # size) so the launcher doesn't feel too tall on screen.
-        self.setMinimumSize(QSize(980, 460))
+        self.setWindowTitle("3D Printer Launcher")
+        # Increase default height further so the cards and log have extra space
+        # on modern displays. This is roughly +6cm over the original height.
+        self.setMinimumSize(QSize(980, 700))
 
         self.theme = "dark"
         self.setStyleSheet(build_styles(self.theme))
@@ -37,7 +39,9 @@ class MainWindow(QMainWindow):
         # Log view
         self.log_view = QPlainTextEdit()
         self.log_view.setReadOnly(True)
-        self.log_view.setLineWrapMode(QPlainTextEdit.NoWrap)
+        # Wrap log lines at the widget edge so long messages don't run off
+        # the side of the screen.
+        self.log_view.setLineWrapMode(QPlainTextEdit.WidgetWidth)
         self.log_view.setObjectName("LogView")
 
         # Root layout
@@ -57,17 +61,25 @@ class MainWindow(QMainWindow):
         left_layout.setContentsMargins(12, 12, 12, 12)
         left_layout.setSpacing(12)
 
-        # Topbar
-        topbar = QHBoxLayout()
-        topbar.setSpacing(10)
+        # Topbar (two-row layout so button text is never crushed)
+        topbar_col = QVBoxLayout()
+        topbar_col.setSpacing(6)
+
+        topbar_main = QHBoxLayout()
+        topbar_main.setSpacing(10)
+
+        topbar_secondary = QHBoxLayout()
+        topbar_secondary.setSpacing(8)
 
         self.btn_start_all = QPushButton("Start all")
         self.btn_stop_all = QPushButton("Stop all")
         self.btn_open_logs = QPushButton("Open all logs")
         self.btn_clear = QPushButton("Clear log")
+        self.btn_manage_printers = QPushButton("Manage printers")
 
         self.btn_start_all.setObjectName("PrimaryButton")
         self.btn_stop_all.setObjectName("PrimaryButton")
+        self.btn_manage_printers.setObjectName("PrimaryButton")
 
         self.btn_light = QPushButton("☀")
         self.btn_dark = QPushButton("🌙")
@@ -80,20 +92,28 @@ class MainWindow(QMainWindow):
         self.btn_stop_all.clicked.connect(self.stop_all)
         self.btn_open_logs.clicked.connect(self.open_all_logs)
         self.btn_clear.clicked.connect(self.log_view.clear)
+        self.btn_manage_printers.clicked.connect(self.open_manage_tools)
 
         self.btn_light.clicked.connect(lambda: self.set_theme("light"))
         self.btn_dark.clicked.connect(lambda: self.set_theme("dark"))
 
-        topbar.addWidget(self.btn_start_all)
-        topbar.addWidget(self.btn_stop_all)
-        topbar.addStretch(1)
-        topbar.addWidget(self.btn_open_logs)
-        topbar.addWidget(self.btn_clear)
-        topbar.addSpacing(8)
-        topbar.addWidget(self.btn_light)
-        topbar.addWidget(self.btn_dark)
+        # First row: main actions (start/stop/manage)
+        topbar_main.addWidget(self.btn_start_all)
+        topbar_main.addWidget(self.btn_stop_all)
+        topbar_main.addWidget(self.btn_manage_printers)
+        topbar_main.addStretch(1)
 
-        left_layout.addLayout(topbar)
+        # Second row: logs + theme toggles
+        topbar_secondary.addWidget(self.btn_open_logs)
+        topbar_secondary.addWidget(self.btn_clear)
+        topbar_secondary.addStretch(1)
+        topbar_secondary.addWidget(self.btn_light)
+        topbar_secondary.addWidget(self.btn_dark)
+
+        topbar_col.addLayout(topbar_main)
+        topbar_col.addLayout(topbar_secondary)
+
+        left_layout.addLayout(topbar_col)
 
         # Cards container inside scroll
         cards_container = QWidget()
@@ -102,13 +122,9 @@ class MainWindow(QMainWindow):
         cards_layout.setContentsMargins(0, 0, 0, 0)
         cards_layout.setSpacing(12)
 
+        self.cards_layout: QVBoxLayout = cards_layout
         self.runners: list[AppRunner] = []
-        for spec in specs:
-            runner = AppRunner(spec, self.append_log)
-            self.runners.append(runner)
-            cards_layout.addWidget(runner)
-
-        cards_layout.addStretch(1)
+        self._build_runners(specs)
 
         scroll = QScrollArea()
         scroll.setObjectName("CardsScroll")
@@ -157,6 +173,11 @@ class MainWindow(QMainWindow):
         act_open_dev.triggered.connect(self.open_dev_folder)
         menu.addAction(act_open_dev)
 
+        # Configuration / management
+        act_manage = QAction("Manage printers / tools", self)
+        act_manage.triggered.connect(self.open_manage_tools)
+        menu.addAction(act_manage)
+
         # License link (opens the bundled LGPLv3 LICENSE file)
         act_license = QAction("View LGPL-3 License", self)
         act_license.triggered.connect(self.open_license)
@@ -172,6 +193,8 @@ class MainWindow(QMainWindow):
 
         # Apply initial theme once UI is wired up
         self.set_theme(self.theme)
+        # Initialise top-level Start all / Stop all button states
+        self._refresh_all_buttons()
 
     def set_theme(self, theme: str) -> None:
         """Switch between light and dark themes and update toggle state."""
@@ -197,10 +220,12 @@ class MainWindow(QMainWindow):
     def start_all(self) -> None:
         for r in self.runners:
             r.start()
+        self._refresh_all_buttons()
 
     def stop_all(self) -> None:
         for r in self.runners:
             r.stop()
+        self._refresh_all_buttons()
 
     def open_all_logs(self) -> None:
         for r in self.runners:
@@ -219,3 +244,74 @@ class MainWindow(QMainWindow):
         lic = BASE_DIR / "LICENSE"
         if lic.exists():
             QDesktopServices.openUrl(lic.as_uri())
+
+    def open_manage_tools(self) -> None:
+        """Open the Manage Tools dialog.
+        """
+
+        dlg = ManageToolsDialog(self, on_saved=self._reload_tools_from_config)
+        dlg.exec()
+
+    # ---- Dynamic tools management ----
+
+    def _build_runners(self, specs: list[AppSpec]) -> None:
+        """(Re)build the AppRunner cards list from the given specs."""
+
+        # Clear existing widgets from the layout
+        while self.cards_layout.count():
+            item = self.cards_layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)
+
+        self.runners = []
+        for spec in specs:
+            runner = AppRunner(spec, self.append_log)
+            self.runners.append(runner)
+            self.cards_layout.addWidget(runner)
+
+        self.cards_layout.addStretch(1)
+        self._refresh_all_buttons()
+
+    def _reload_tools_from_config(self) -> None:
+        """Reload enabled tools from tools_config.json and refresh the UI.
+
+        This is used as a callback from the ManageToolsDialog so that changes
+        take effect immediately without restarting the application.
+        """
+
+        tools = load_tools_config()
+        specs: list[AppSpec] = []
+        for t in tools:
+            if not t.enabled:
+                continue
+            specs.append(
+                AppSpec(
+                    name=t.label,
+                    project_dir=BASE_DIR / t.project_dir,
+                    script=t.script,
+                    kind=t.kind,
+                    moonraker_url=getattr(t, "moonraker_url", None),
+                    moonraker_port=getattr(t, "moonraker_port", None),
+                )
+            )
+
+        self._build_runners(specs)
+
+    def _refresh_all_buttons(self) -> None:
+        """Update Start all / Stop all button enabled state.
+
+        - Start all is enabled if at least one tool is not running.
+        - Stop all is enabled if at least one tool is running.
+        This gives users clear feedback which bulk action currently makes
+        sense and avoids redundant clicks.
+        """
+
+        if not hasattr(self, "runners"):
+            return
+
+        any_running = any(r.is_running() for r in self.runners)
+        any_stopped = any(not r.is_running() for r in self.runners)
+
+        self.btn_start_all.setEnabled(any_stopped)
+        self.btn_stop_all.setEnabled(any_running)

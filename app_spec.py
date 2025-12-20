@@ -61,6 +61,14 @@ class AppSpec:
     name: str
     project_dir: Path
     script: str
+    # Optional behavioural hint used by the UI/runner; for example
+    # "oneshot" hides the Stop button and uses a different label.
+    kind: str = "normal"
+    # Optional per-tool Moonraker settings for Klipper dashboards.
+    # When provided, the launcher will inject MOONRAKER_API_URL into the
+    # child process environment and pass "--port" on the command line.
+    moonraker_url: str | None = None
+    moonraker_port: int | None = None
 
     @property
     def venv_python(self) -> Path:

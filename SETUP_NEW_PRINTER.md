@@ -1,8 +1,9 @@
-# Setting up a new printer / customising sensors and overlays
+# Setting up a new printer / customising sensors, overlays, and Qidi helpers
 
 This document explains how to adapt the dashboards for a **different printer**
 or add/remove sensors in both the **Python backends** and the
-**HTML/JavaScript overlays**.
+**HTML/JavaScript overlays**. It also covers the Qidi webcam restart helper
+credentials.
 
 It applies to:
 
@@ -10,6 +11,7 @@ It applies to:
   [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html:1)
 - Voron / Klipper temps: [`VoronTemps/app.py`](VoronTemps/app.py:1) and
   [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:1)
+- Qidi webcam restart helper: [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:1)
 
 My own Voron config repo is public at
 https://github.com/oernster/VT350, but the patterns below work regardless of
@@ -293,7 +295,39 @@ show more fans, you would extend both the Python payload and the JS UI in the
 same pattern as with temperatures.
 
 
-## 5. Creating a new dashboard folder for another printer
+## 5. Qidi webcam restart credentials
+
+The Qidi webcam restart helper connects to your printer over SSH. To avoid
+committing passwords to Git, credentials are loaded from a small JSON file
+that is **ignored by version control**.
+
+1. In the `qidiwebcamdrestart/` folder, create a file
+   `credentials.json` (this path is already listed in
+   [`.gitignore`](.gitignore:1)).
+
+   Minimum structure:
+
+   ```json
+   {
+     "password": "makerbase"
+   }
+   ```
+
+2. Adjust the IP/username in
+   [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:35)
+   if needed:
+
+   ```python
+   ip_address = "192.168.1.120"
+   username = "root"
+   password = _load_password()
+   ```
+
+   The helper will fail with a clear error if `credentials.json` is
+   missing or malformed, and no password is ever stored in the repo.
+
+
+## 6. Creating a new dashboard folder for another printer
 
 If you want a completely separate overlay (e.g. for a second Voron):
 
@@ -305,7 +339,8 @@ If you want a completely separate overlay (e.g. for a second Voron):
 
 2. Adjust the backend:
    - Rename the Flask app/module if desired.
-   - Update `MOONRAKER_API_URL` to point at the new printer.
+   - Update `MOONRAKER_API_URL` or `config.json` / `--moonraker-url` settings
+     to point at the new printer.
    - Tweak `temperature_sensors` / `temperature_sensor_variables` (Voron) or
      `temperature_sensors` (Qidi) as described above.
 
@@ -313,10 +348,9 @@ If you want a completely separate overlay (e.g. for a second Voron):
    - Change the visible labels to match your new sensors.
    - Ensure the JS key names match the JSON keys from your modified backend.
 
-4. Register the new tool in the launcher by adding another
-   [`AppSpec`](app_spec.py:59) entry in
-   [`build_specs()`](main.py:13), pointing `project_dir` to your new folder and
-   `script` to your copied Flask app.
+4. Register the new tool in the launcher using the “Manage printers / tools”
+   dialog (or by editing `tools_config.json` directly), pointing `project_dir`
+   to your new folder and `script` to your Flask app.
 
 With these steps you can bring up overlays for additional printers while
 reusing the same patterns and code structure.

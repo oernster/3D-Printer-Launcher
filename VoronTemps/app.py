@@ -2,8 +2,64 @@ from flask import Flask, render_template, jsonify
 import aiohttp
 import asyncio
 import logging
+import os
+import json
+from pathlib import Path
+import argparse
 
 logging.basicConfig(level=logging.DEBUG)
+
+
+DEFAULT_MOONRAKER_URL = "http://192.168.1.226:7125/printer/objects/query"
+
+
+def _load_moonraker_url_from_config() -> str | None:
+    """Try to load the Moonraker URL from a local config.json file.
+
+    The file is expected to live alongside this script and contain at least:
+
+        {"moonraker_url": "http://printer-host:7125/printer/objects/query"}
+
+    Any errors simply cause this function to return None.
+    """
+
+    cfg_path = Path(__file__).with_name("config.json")
+    if not cfg_path.exists():
+        return None
+
+    try:
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    url = data.get("moonraker_url") or data.get("url")
+    if isinstance(url, str) and url.strip():
+        return url.strip()
+    return None
+
+
+def resolve_moonraker_url(cli_arg: str | None = None) -> str:
+    """Determine which Moonraker API URL to use for this dashboard.
+
+    Precedence (first non-empty wins):
+    1. Explicit --moonraker-url CLI argument
+    2. Environment variable MOONRAKER_API_URL
+    3. Local config.json next to this script (moonraker_url/url key)
+    4. Built-in DEFAULT_MOONRAKER_URL
+    """
+
+    if cli_arg and cli_arg.strip():
+        return cli_arg.strip()
+
+    env = os.environ.get("MOONRAKER_API_URL")
+    if env and env.strip():
+        return env.strip()
+
+    cfg = _load_moonraker_url_from_config()
+    if cfg:
+        return cfg
+
+    return DEFAULT_MOONRAKER_URL
 
 class PrinterDataFetcher:
     """Class responsible for fetching data from the 3D printer API."""
@@ -141,9 +197,38 @@ class PrinterDashboardApp:
 
 # Main application entry point
 if __name__ == "__main__":
-    # Configuration
-    MOONRAKER_API_URL = "http://192.168.1.226:7125/printer/objects/query"
-    
-    # Initialize and run the application
-    app = PrinterDashboardApp(MOONRAKER_API_URL)
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    parser = argparse.ArgumentParser(description="Voron / Klipper Moonraker dashboard")
+    parser.add_argument(
+        "--moonraker-url",
+        dest="moonraker_url",
+        help=(
+            "Full Moonraker API URL, e.g. "
+            "http://printer-host:7125/printer/objects/query. "
+            "If omitted, MOONRAKER_API_URL env var, config.json, "
+            "or a built-in default will be used."
+        ),
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host interface for the Flask server (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=5000,
+        help="Port for the Flask server (default: 5000)",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable Flask debug mode",
+    )
+
+    args = parser.parse_args()
+
+    moonraker_url = resolve_moonraker_url(args.moonraker_url)
+    logging.info("Using Moonraker API URL: %s", moonraker_url)
+
+    app = PrinterDashboardApp(moonraker_url)
+    app.run(host=args.host, port=args.port, debug=args.debug, use_reloader=False)

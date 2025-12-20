@@ -71,10 +71,11 @@ class AppRunner(QWidget):
         self.btn_start.setObjectName("StartButton")
         self.btn_stop.setObjectName("StopButton")
 
-        # Special-case UI for the webcam restart tool: it is a one-shot
-        # command, so present a single "Restart" button and no Stop button.
-        if self.spec.name == "Qidi Webcamd restart":
-            self.btn_start.setText("Restart")
+        # Special-case UI for one-shot tools (e.g. webcam restart): show a
+        # single primary action button and hide Stop. This is driven by the
+        # spec.kind field so users can rename tools without breaking behaviour.
+        if getattr(self.spec, "kind", "normal") == "oneshot":
+            self.btn_start.setText("Run")
             self.btn_stop.hide()
 
         self.btn_start.clicked.connect(self.start)
@@ -120,18 +121,33 @@ class AppRunner(QWidget):
 
         self.proc.setWorkingDirectory(str(self.spec.project_dir))
         self.proc.setProgram(str(self.spec.venv_python))
-        self.proc.setArguments([str(self.spec.script_path)])
 
-        # ✅ Force UTF-8 for child process stdout/stderr on Windows
+        args = [str(self.spec.script_path)]
+        # Optional per-printer Moonraker port (for Klipper dashboards). When
+        # specified, append a --port argument so multiple dashboards can run
+        # concurrently on different ports.
+        if getattr(self.spec, "moonraker_port", None):
+            args.extend(["--port", str(self.spec.moonraker_port)])
+        self.proc.setArguments(args)
+
+        # ✅ Force UTF-8 for child process stdout/stderr on Windows and inject
+        # optional Moonraker URL for Klipper printers.
         env = self.proc.processEnvironment()
         env.insert("PYTHONUTF8", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
+        url = getattr(self.spec, "moonraker_url", None)
+        if url:
+            env.insert("MOONRAKER_API_URL", url)
         self.proc.setProcessEnvironment(env)
 
         self._log(f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} START ====\n")
         self._log(f"[launcher] Using: {self.spec.venv_python}\n")
         self._log(f"[launcher] Working dir: {self.spec.project_dir}\n")
         self._log(f"[launcher] Script: {self.spec.script_path}\n")
+        if getattr(self.spec, "moonraker_url", None):
+            self._log(f"[launcher] Moonraker URL: {self.spec.moonraker_url}\n")
+        if getattr(self.spec, "moonraker_port", None):
+            self._log(f"[launcher] Dashboard port: {self.spec.moonraker_port}\n")
 
         self._set_status("Starting…", kind="warn")
         self.proc.start()

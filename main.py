@@ -7,27 +7,37 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from app_spec import AppSpec, BASE_DIR
+from config import ensure_config_exists, load_tools_config
 from main_window import MainWindow
 
 
 def build_specs() -> list[AppSpec]:
-    return [
-        AppSpec(
-            name="Qidi Temps",
-            project_dir=BASE_DIR / "qidi-temps",
-            script="app.py",
-        ),
-        AppSpec(
-            name="Qidi Webcamd restart",
-            project_dir=BASE_DIR / "qidiwebcamdrestart",
-            script="webcamdrestart.py",
-        ),
-        AppSpec(
-            name="Voron Temps",
-            project_dir=BASE_DIR / "VoronTemps",
-            script="app.py",
-        ),
-    ]
+    """Build AppSpec list from the persisted tools configuration.
+
+    This replaces the previously hard-coded Qidi/Voron tools and allows
+    users to enable/disable Qidi tools and add arbitrary Klipper printers
+    (or other tools) with custom labels.
+    """
+
+    ensure_config_exists()
+    tools = load_tools_config()
+
+    specs: list[AppSpec] = []
+    for t in tools:
+        if not t.enabled:
+            continue
+        specs.append(
+            AppSpec(
+                name=t.label,
+                project_dir=BASE_DIR / t.project_dir,
+                script=t.script,
+                kind=t.kind,
+                moonraker_url=t.moonraker_url,
+                moonraker_port=t.moonraker_port,
+            )
+        )
+
+    return specs
 
 
 def main() -> int:

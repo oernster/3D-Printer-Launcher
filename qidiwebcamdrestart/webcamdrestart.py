@@ -1,5 +1,42 @@
+import json
+from pathlib import Path
+
 import paramiko
 import time
+
+
+def _load_password() -> str:
+    """Load the SSH password from a local JSON file next to this script.
+
+    Expected structure of ``credentials.json`` in this folder::
+
+        {"password": "makerbase"}
+
+    The file is intentionally kept out of version control so that credentials
+    are never committed to Git.
+    """
+
+    cfg_path = Path(__file__).with_name("credentials.json")
+    try:
+        raw = cfg_path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"Missing credentials file: {cfg_path}. "
+            "Create it with e.g. {\"password\": \"makerbase\"}."
+        ) from exc
+
+    try:
+        data = json.loads(raw)
+    except Exception as exc:
+        raise RuntimeError(f"Failed to parse {cfg_path}: {exc}") from exc
+
+    pw = data.get("password")
+    if not isinstance(pw, str) or not pw:
+        raise RuntimeError(
+            f"Invalid password in {cfg_path}: expected non-empty 'password' field."
+        )
+    return pw
+
 
 def ssh_command(ip, username, password, command):
     # Create a new SSH client
@@ -35,7 +72,7 @@ def ssh_command(ip, username, password, command):
 # User settings
 ip_address = "192.168.1.120"
 username = "root"
-password = "Insert your password here; for Qidi Q1 pro's this is typically makerbase"  # Replace with your actual password
+password = _load_password()
 
 # Commands to execute
 commands = "sudo service webcamd restart"

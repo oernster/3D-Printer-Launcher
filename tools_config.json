@@ -1,0 +1,48 @@
+{
+  "tools": [
+    {
+      "enabled": true,
+      "id": "qidi-temps",
+      "kind": "normal",
+      "label": "Qidi Temps",
+      "moonraker_api_port": null,
+      "moonraker_port": 5000,
+      "moonraker_url": "http://192.168.1.120:7125/printer/objects/query",
+      "project_dir": "qidi-temps",
+      "script": "app.py"
+    },
+    {
+      "enabled": false,
+      "id": "qidi-webcamd-restart",
+      "kind": "oneshot",
+      "label": "Qidi Webcamd restart",
+      "moonraker_api_port": null,
+      "moonraker_port": 5000,
+      "moonraker_url": "http://192.168.1.120:7125/printer/objects/query",
+      "project_dir": "qidiwebcamdrestart",
+      "script": "webcamdrestart.py"
+    },
+    {
+      "enabled": true,
+      "id": "voron-temps",
+      "kind": "normal",
+      "label": "Voron Temps",
+      "moonraker_api_port": null,
+      "moonraker_port": 5001,
+      "moonraker_url": "https://192.168.1.226:7125/printer/objects/query",
+      "project_dir": "VoronTemps",
+      "script": "app.py"
+    },
+    {
+      "enabled": true,
+      "id": "printer-4",
+      "kind": "normal",
+      "label": "Voron 2",
+      "moonraker_api_port": 7125,
+      "moonraker_port": 5002,
+      "moonraker_url": "http://192.168.1.227:7125/printer/objects/query",
+      "project_dir": "VoronTemps",
+      "script": "app.py"
+    }
+  ]
+}
