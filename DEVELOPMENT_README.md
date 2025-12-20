@@ -10,8 +10,12 @@ the launcher executable themselves. End‑users can simply download the latest
 
 - Launcher entry point: [`main.py`](main.py:1)
 - Tool specification and path handling: [`app_spec.py`](app_spec.py:1)
-- Main window UI: [`main_window.MainWindow()`](main_window.py:26)
+- Persistent tool/printer config model:
+  [`config.ToolEntry`](config.py:13), [`config.load_tools_config()`](config.py:68)
+- Main window UI: [`main_window.MainWindow()`](main_window.py:28)
 - Per‑tool runner widget: [`runner_widget.AppRunner()`](runner_widget.py:21)
+- Tools/printers management dialog:
+  [`manage_tools_dialog.ManageToolsDialog()`](manage_tools_dialog.py:28)
 - Shared styling: [`styles.py`](styles.py:1)
 - Nuitka build helper script: [`build_nuitka.py`](build_nuitka.py:1)
 - Windows build convenience wrapper: [`build_nuitka.cmd`](build_nuitka.cmd:1)
@@ -205,23 +209,46 @@ and the tool folders and ask users to create the `venv` themselves as outlined
 in [`README.md`](README.md:24).
 
 
-## 6. Modifying or adding tools
+## 6. Modifying or adding tools/printers
 
-Available tools are configured in
-[`build_specs()`](main.py:13). To change them:
+Available tools/printers are now configured via `tools_config.json` and the
+Manage dialog, not hard‑coded in `main.py`.
 
-1. Edit [`main.py`](main.py:13) and update the list of
-   [`AppSpec`](app_spec.py:59) instances.
-2. Ensure each new tool has a project directory and script file, and that it
-   can be run with the shared `venv` Python.
-3. Rebuild the executable using section 4.
+### 6.1 Editing via JSON
+
+- Structure is defined by [`config.ToolEntry`](config.py:13).
+- Top‑level file lives next to `main.py` as
+  [`tools_config.json`](tools_config.json:1).
+- `main.build_specs()` and `MainWindow._reload_tools_from_config()` consume
+  this file and build corresponding [`AppSpec`](app_spec.py:59) instances.
+
+Each entry allows you to configure:
+
+- `label` – UI name of the card.
+- `project_dir` and `script` – which backend to run.
+- `kind` – `"normal"` vs `"oneshot"` (affects Start/Stop buttons).
+- `enabled` – whether the card appears in the launcher.
+- `moonraker_url`, `moonraker_api_port`, `moonraker_port` – per‑printer
+  Moonraker and dashboard configuration for Klipper printers.
+
+### 6.2 Editing via the Manage dialog
+
+For most cases you should prefer the UI:
+
+- Open **Tools → Manage printers / tools** or click **Manage printers** in the
+  top bar.
+- Edit the fields as described in the main [`README`](README.md:1).
+- Press **Save changes** – the launcher reloads the config and rebuilds its
+  `AppRunner` cards live.
+
+### 6.3 Code‑level changes
 
 If you add tools that have different dependency sets from the existing ones,
 consider either:
 
 - Keeping a single, larger `venv` that satisfies all tools, or
-- Teaching [`AppSpec`](app_spec.py:59) to point at per-tool virtualenvs and
-  adjusting [`AppRunner.start()`](runner_widget.py:109) accordingly.
+- Teaching [`AppSpec`](app_spec.py:59) to point at per‑tool virtualenvs and
+  adjusting [`AppRunner.start()`](runner_widget.py:110) accordingly.
 
 
 ## 7. Licensing

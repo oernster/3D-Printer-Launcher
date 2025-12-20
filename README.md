@@ -10,17 +10,18 @@
 
 If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
-[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
 
 Small Windows launcher for my 3D‑printer helper tools:
 
 - Qidi temperature dashboard (Flask web UI)
-- Voron/Klipper temperature dashboard (Flask web UI)
+- Voron/Generic Klipper temperature dashboard (Flask web UI)
 - Qidi `webcamd` SSH restart helper
 
 The launcher is a single windowed app (PySide6/Qt) that starts each tool in its
 own Python virtual environment, shows live log output, and gives quick access
-to log files and project folders.
+to log files and project folders. The list of printers/tools and their
+Moonraker settings is now fully configurable from the UI.
 
 End‑users are expected to download the pre‑built `.exe` from this repository’s
 GitHub Releases page. Building the executable from source is optional and is
@@ -31,11 +32,18 @@ documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md:1).
 
 The important pieces for day‑to‑day use are:
 
-- The launcher GUI: [`main.py`](main.py:1)
-- Shared virtualenv requirements: [`requirements.txt`](requirements.txt:1)
+- The launcher GUI entry point: [`main.py`](main.py:1)
+- Tool configuration model and JSON loader: [`config.ToolEntry`](config.py:13),
+  [`config.load_tools_config()`](config.py:68)
+- Main window UI: [`main_window.MainWindow()`](main_window.py:28)
+- Per‑tool runner widget: [`runner_widget.AppRunner()`](runner_widget.py:21)
+- Tools/printers management dialog:
+  [`manage_tools_dialog.ManageToolsDialog()`](manage_tools_dialog.py:28)
+- Shared styling: [`styles.py`](styles.py:1)
 - Qidi temperature dashboard: [`qidi-temps/app.py`](qidi-temps/app.py:1)
 - Voron/Klipper temperature dashboard: [`VoronTemps/app.py`](VoronTemps/app.py:1)
-- Qidi `webcamd` restart helper: [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:1)
+- Qidi `webcamd` restart helper:
+  [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:1)
 
 Each temperature dashboard also has its own more detailed README with
 background and older one‑off usage instructions:
@@ -43,8 +51,9 @@ background and older one‑off usage instructions:
 - [`qidi-temps/README.md`](qidi-temps/README.md:1)
 - [`VoronTemps/README.md`](VoronTemps/README.md:1)
 
-The launcher itself is implemented by [`main_window.MainWindow()`](main_window.py:26)
-and [`runner_widget.AppRunner()`](runner_widget.py:21), with some path/packaging
+The launcher itself is implemented by
+[`main_window.MainWindow()`](main_window.py:28) and
+[`runner_widget.AppRunner()`](runner_widget.py:21), with some path/packaging
 helpers in [`app_spec.py`](app_spec.py:1).
 
 
@@ -53,10 +62,10 @@ helpers in [`app_spec.py`](app_spec.py:1).
 1. Go to this repository’s **Releases** page on GitHub and download the latest
    Windows executable (`.exe`).
 2. If you cloned the repo or downloaded the full source ZIP from GitHub, the
-   `.exe` will already live alongside the `qidi-temps/`, `VoronTemps/` and
-   `qidiwebcamdrestart/` folders – you do not need to move anything.
-   If you move the `.exe` somewhere else, keep it next to those three folders so
-   the launcher can locate the tools.
+   `.exe` should live alongside the `qidi-temps/`, `VoronTemps/` and
+   `qidiwebcamdrestart/` folders – you do not need to move anything. If you move
+   the `.exe` somewhere else, keep it next to those three folders so the
+   launcher can locate the tools.
 3. Double‑click the `.exe` to start the **3D‑Printer‑Launcher** window.
 
 The launcher expects a shared Python virtual environment called `venv` to live
@@ -86,98 +95,85 @@ below.
    ```
 
 The launcher uses this environment automatically via
-[`AppSpec.venv_python`](app_spec.py:66), so you do **not** need to manually
+[`AppSpec.venv_python`](app_spec.py:68), so you do **not** need to manually
 activate it when starting tools through the UI.
 
 
-## 4. Configuring the temperature dashboards
+## 4. Configuring printers and Moonraker (UI‑based)
 
-Both dashboards query your printers via the Moonraker HTTP API. You **must**
-configure the correct IP/URL once before using them.
+All Klipper printers are accessed via the Moonraker HTTP API. You configure
+*which* printers exist and how to contact each one entirely from the launcher
+UI.
 
-If you want to customise which sensors are shown, add new sensors, or set up a
-new dashboard folder for another printer, see
-[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md) for detailed Python and
-HTML/JavaScript examples.
+1. Start the 3D‑Printer‑Launcher.
+2. Click **Manage printers** in the top bar, or use the menu:
+   **Tools → Manage printers / tools**. This opens
+   [`manage_tools_dialog.ManageToolsDialog()`](manage_tools_dialog.py:28).
+3. In the left list select an existing printer/tool or click **Add** to create
+   a new one.
+4. On the right, configure:
+   - **Label** – how the card appears in the main window (e.g. `Voron 2.4`,
+     `Qidi X‑Plus`).
+   - **Project dir** – the folder containing the backend script (typically
+     `VoronTemps` or `qidi-temps`).
+   - **Script** – entrypoint script file (e.g. `app.py`).
+   - **Moonraker IP/host** – just the hostname or IP of the printer running
+     Moonraker (e.g. `192.168.1.226`).
+   - **Moonraker API port** – TCP port where Moonraker listens (default `7125`).
+   - **Dashboard port** – local Flask UI port (e.g. `5000`, `5001`, `5002`);
+     use a different value per printer if you want multiple dashboards at the
+     same time.
+   - **Kind** – `normal` for regular tools, `oneshot` for one‑shot helpers
+     (this hides the Stop button and shows a single Run action).
+   - **Webcam password** – only relevant for the Qidi Webcam restart tool; this
+     writes a local `qidiwebcamdrestart/credentials.json` file ignored by Git.
+5. Click **Save changes**. The main window updates immediately to reflect your
+   changes.
 
-### 4.1 Qidi temps (Klipper / Moonraker)
+Under the hood, these settings are stored in `tools_config.json` and mapped to
+[`config.ToolEntry`](config.py:13) objects. The Moonraker IP/host and API port
+are combined into the full
+`http://<host>:<api_port>/printer/objects/query` URL which is passed into the
+backend scripts via the `MOONRAKER_API_URL` environment variable.
 
-Code: [`qidi-temps/app.py`](qidi-temps/app.py:1)
-
-The Qidi dashboard reads the Moonraker URL from the `MOONRAKER_API_URL`
-environment variable, with a fallback hard‑coded default.
-
-The simplest and safest approach is to set `MOONRAKER_API_URL` in the
-environment before you start the launcher, for example:
-
-```powershell
-$env:MOONRAKER_API_URL = "http://192.168.1.120:7125/printer/objects/query"
-```
-
-Alternatively, you can edit the default URL inside
-[`qidi-temps/app.py`](qidi-temps/app.py:176) directly.
-
-By default the Qidi dashboard runs on:
-
-- **URL:** `http://127.0.0.1:5001/`
-
-### 4.2 Voron / generic Klipper temps
-
-Code: [`VoronTemps/app.py`](VoronTemps/app.py:1)
-
-This script has the Moonraker API URL hard‑coded near the bottom in the
-`MOONRAKER_API_URL` assignment (around
-[`VoronTemps/app.py`](VoronTemps/app.py:145)). Edit that line to point at your
-Voron/Klipper printer, for example:
-
-```python
-MOONRAKER_API_URL = "http://192.168.1.226:7125/printer/objects/query"
-```
-
-By default the Voron dashboard runs on:
-
-- **URL:** `http://127.0.0.1:5000/`
-
-After configuring each script, you can either run it via the launcher UI or
-manually from the `venv` for testing, for example:
-
-```powershell
-.\venv\Scripts\python.exe .\qidi-temps\app.py
-.\venv\Scripts\python.exe .\VoronTemps\app.py
-```
+Most users never need to touch the Python code to change printers – use the
+Manage dialog instead. If you want to customise sensors or the HTML overlays
+themselves, see [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
 
 
 ## 5. Using the launcher UI
 
 The main window is implemented by
-[`main_window.MainWindow()`](main_window.py:26), which creates one
+[`main_window.MainWindow()`](main_window.py:28), which creates one
 [`runner_widget.AppRunner()`](runner_widget.py:21) card per tool defined in
-[`main.build_specs()`](main.py:13).
+`tools_config.json`.
 
 Each card shows:
 
-- Tool name (e.g. “Qidi Temps”, “Voron Temps”)
+- Tool name (e.g. “Qidi Temps”, “Voron Temps”, your custom labels)
 - Status badge: **Stopped**, **Running**, **Error**, etc.
 - Buttons:
-  - **Start** – launches the script in the shared `venv` using
+  - **Start / Run** – launches the script in the shared `venv` using
     [`QProcess`](runner_widget.py:29)
   - **Stop** – sends a polite terminate, then a kill if needed
   - **Open log** – opens the latest log file created via
-    [`AppSpec.log_path`](app_spec.py:79)
+    [`AppSpec.log_path`](app_spec.py:82)
   - **Open folder** – opens the underlying project directory in your file
     manager
 
-The top bar also provides:
+The top bar provides:
 
-- **Start all / Stop all** – bulk control over all tools at once
+- **Start all / Stop all** – bulk control over all tools at once; the buttons
+  enable/disable themselves based on whether any tools are running.
 - **Open all logs** – opens each tool’s log file
 - **Clear log** – clears the live log pane
 - **☀ / 🌙** – switches between light and dark themes (see
-  [`MainWindow.set_theme()`](main_window.py:176))
+  [`MainWindow.set_theme()`](main_window.py:182))
 
 The right‑hand pane shows merged live output from all running tools. Each line
 is prefixed with the tool name by
-[`MainWindow.append_log()`](main_window.py:190).
+[`MainWindow.append_log()`](main_window.py:196). Long lines automatically wrap
+within the log view so they never run off the side of the window.
 
 
 ## 6. Integrating with OBS Studio (displaying temps)
@@ -185,20 +181,27 @@ is prefixed with the tool name by
 The dashboards are designed to be embedded directly into OBS via **Browser
 Source** elements. You can add one source per printer.
 
+By default the launcher uses these local dashboard ports (which you can change
+per printer in the Manage dialog):
+
+- Qidi temps: `http://127.0.0.1:5001/`
+- Voron/Klipper temps (first printer): `http://127.0.0.1:5000/`
+- Additional printers: whatever **Dashboard port** you configured.
+
 ### 6.1 Qidi temperature overlay
 
 1. Ensure the shared `venv` is set up (see section 3) and the launcher is
    running.
-2. In the launcher, press **Start** on **Qidi Temps**. Wait until the status
-   shows **Running**.
-3. Open a normal browser and verify that
-   `http://127.0.0.1:5001/` shows the Qidi dashboard.
+2. In the launcher, press **Start** on your **Qidi Temps** card. Wait until the
+   status shows **Running**.
+3. Open a normal browser and verify that `http://127.0.0.1:5001/` (or your
+   configured Dashboard port) shows the Qidi dashboard.
 4. In **OBS Studio**:
    1. Add (or select) a Scene.
    2. Click **+** in the **Sources** panel → **Browser**.
    3. Give it a name like `QidiTemps`.
    4. Untick **Local file**.
-   5. Set **URL** to `http://127.0.0.1:5001/`.
+   5. Set **URL** to your local Qidi dashboard URL.
    6. Set **Width/Height** to match your canvas or desired overlay size
       (e.g. 1920×200 for a thin bar at the bottom).
    7. Optionally set **Custom CSS** to adjust background transparency or font.
@@ -206,15 +209,16 @@ Source** elements. You can add one source per printer.
 
 ### 6.2 Voron / Klipper temperature overlay
 
-1. With the launcher and `venv` ready, press **Start** on **Voron Temps**.
-2. Verify in a browser that `http://127.0.0.1:5000/` shows the Voron
+1. With the launcher and `venv` ready, press **Start** on your Voron/Klipper
+   card.
+2. Verify in a browser that `http://127.0.0.1:<dashboard-port>/` shows the
    dashboard.
 3. In **OBS Studio** repeat the Browser Source steps above, but set the **URL**
-   to `http://127.0.0.1:5000/` and name the source something like
+   to the appropriate local dashboard port and name the source something like
    `VoronTridentTemps`.
 
-You can run both dashboards at the same time and add two Browser sources in
-OBS, one per printer.
+You can run multiple dashboards at the same time and add one Browser source per
+printer in OBS.
 
 
 ## 7. Autostart
@@ -233,9 +237,10 @@ quickly start whichever tools you need.
 Most users should only ever need the pre‑built `.exe` from GitHub Releases.
 
 If you want to build or modify the launcher from source (for example to tweak
-styling in [`styles.py`](styles.py:1) or change which tools are launched in
-[`main.build_specs()`](main.py:13)), see the full developer guide in
+styling in [`styles.py`](styles.py:1) or change which tools are launched by
+default in `tools_config.json`), see the full developer guide in
 [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md:1). That document covers the
 Nuitka build setup (via [`build_nuitka.py`](build_nuitka.py:1) or
 [`build_nuitka.cmd`](build_nuitka.cmd:1)) and the expected folder layout for
 releasing your own executables.
+

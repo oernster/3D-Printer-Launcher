@@ -327,7 +327,7 @@ that is **ignored by version control**.
    missing or malformed, and no password is ever stored in the repo.
 
 
-## 6. Creating a new dashboard folder for another printer
+## 6. Creating a new dashboard folder for another printer (optional)
 
 If you want a completely separate overlay (e.g. for a second Voron):
 
@@ -352,6 +352,16 @@ If you want a completely separate overlay (e.g. for a second Voron):
    dialog (or by editing `tools_config.json` directly), pointing `project_dir`
    to your new folder and `script` to your Flask app.
 
-With these steps you can bring up overlays for additional printers while
-reusing the same patterns and code structure.
+With the latest launcher, you normally do **not** need to create additional
+dashboard folders just to add another Klipper printer. Instead you can:
+
+1. Reuse the existing `VoronTemps/` backend and HTML.
+2. Open the launcher and use **Manage printers / tools** to add a new entry
+   pointing at `VoronTemps/app.py` with a different label, Moonraker host, API
+   port and dashboard port.
+
+Only create a new dashboard folder when the HTML or the set of sensors for a
+printer is fundamentally different from the existing dashboards (for example if
+you want a completely different overlay layout for a non‑Voron printer).
+
 
