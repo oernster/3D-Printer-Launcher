@@ -2,7 +2,7 @@
 
 ### [Friendly coffee donation here](https://www.paypal.com/donate/?hosted_button_id=R3DFLDWT2PFC4)
 
-<img width="1273" height="723" alt="{25BA9948-733A-423D-8BDD-F3D5DCEC8064}" src="https://github.com/user-attachments/assets/90b3cef1-6de6-4419-8f8d-06d5b2133526" />
+<img width="1314" height="751" alt="{56F2392A-F4FB-4848-AA1E-2DFB0C938970}" src="https://github.com/user-attachments/assets/7c754947-c6b3-4b80-91bf-7af26788301f" />
 
 <img width="1014" height="651" alt="{DA949606-A2CB-435C-BF8C-0D1F7CAD39E2}" src="https://github.com/user-attachments/assets/33d097ca-4289-4d00-88c3-61ed2024ff70" />
 
