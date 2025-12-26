@@ -7,11 +7,11 @@ credentials.
 
 It applies to:
 
-- Qidi temps: [`qidi-temps/app.py`](qidi-temps/app.py:1) and
-  [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html:1)
-- Voron / Klipper temps: [`VoronTemps/app.py`](VoronTemps/app.py:1) and
-  [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:1)
-- Qidi webcam restart helper: [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:1)
+- Qidi temps: [`qidi-temps/app.py`](qidi-temps/app.py) and
+  [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html)
+- Voron / Klipper temps: [`VoronTemps/app.py`](VoronTemps/app.py) and
+  [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html)
+- Qidi webcam restart helper: [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
 
 My own Voron config repo is public at
 https://github.com/oernster/VT350, but the patterns below work regardless of
@@ -37,7 +37,7 @@ When you add or rename a sensor, you must keep **Python JSON keys** and
 
 ## 2. Qidi temps – configuring sensors
 
-Backend: [`qidi-temps/app.PrinterDataService`](qidi-temps/app.py:55)
+Backend: `qidi-temps/app.PrinterDataService` in [`qidi-temps/app.py`](qidi-temps/app.py)
 
 ```python
 class PrinterDataService:
@@ -78,7 +78,7 @@ Key points:
   }
   ```
 
-Frontend: [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html:1)
+Frontend: [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html)
 
 ```javascript
 this.temperatureElements = {
@@ -95,7 +95,7 @@ The keys in `temperatureElements` **must match** the JSON keys from Python.
 Say your Qidi has a `heater_generic enclosure` sensor you want to show.
 
 1. **Python – add the sensor config** in
-   [`PrinterDataService.__init__`](qidi-temps/app.py:58):
+   `PrinterDataService.__init__` in [`qidi-temps/app.py`](qidi-temps/app.py):
 
    ```python
    self.temperature_sensors.append(
@@ -104,7 +104,7 @@ Say your Qidi has a `heater_generic enclosure` sensor you want to show.
    ```
 
 2. **HTML – add a new card** in
-   [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html:124):
+   [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html):
 
    ```html
    <div class="sensor">
@@ -131,7 +131,7 @@ pick it up.
 
 ## 3. Voron / Klipper temps – configuring sensors
 
-Backend: [`VoronTemps/app.PrinterDataFetcher`](VoronTemps/app.py:8)
+Backend: `VoronTemps/app.PrinterDataFetcher` in [`VoronTemps/app.py`](VoronTemps/app.py)
 
 ```python
 class PrinterDataFetcher:
@@ -160,7 +160,7 @@ There are **two groups** here:
    CHAMBER`.
 
 Within `fetch_temperature_data()`
-([`VoronTemps/app.py`](VoronTemps/app.py:20)):
+([`VoronTemps/app.py`](VoronTemps/app.py)):
 
 ```python
 for sensor, attributes in self.temperature_sensors.items():
@@ -181,7 +181,7 @@ for sensor in self.temperature_sensor_variables:
 - `temperature_sensor_variables` become keys exactly matching the names in that
   list (e.g. `"CHAMBER"`, `"Internals"`).
 
-Frontend: [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:1)
+Frontend: [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html)
 
 ```javascript
 this.temperatureElements = {
@@ -232,7 +232,7 @@ sensor_pin: ...
 ```
 
 1. **Python – add `Toolhead` to the variables list** in
-   [`VoronTemps/app.py`](VoronTemps/app.py:18):
+   [`VoronTemps/app.py`](VoronTemps/app.py):
 
    ```python
    self.temperature_sensor_variables = [
@@ -248,7 +248,7 @@ sensor_pin: ...
    The JSON from `/temperatures` will then include a `"Toolhead"` key.
 
 2. **HTML – add a matching block** in
-   [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:134):
+   [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html):
 
    ```html
    <div id="toolhead" class="sensor">
@@ -277,23 +277,23 @@ Both dashboards expose print progress via a `/progress` endpoint and render a
 single bar in the HTML.
 
 - Qidi backend:
-  [`PrinterDataService.get_progress()`](qidi-temps/app.py:92)
+  `PrinterDataService.get_progress()` in [`qidi-temps/app.py`](qidi-temps/app.py)
 - Voron backend:
-  [`PrinterDataFetcher.fetch_progress_data()`](VoronTemps/app.py:56)
+  `PrinterDataFetcher.fetch_progress_data()` in [`VoronTemps/app.py`](VoronTemps/app.py)
 
 The frontends consume this via:
 
 - Qidi: `DashboardDataManager.getProgress()` and
-  `DashboardUIManager.updateProgress()` in
-  [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html:145).
+   `DashboardUIManager.updateProgress()` in
+  [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html).
 - Voron: `DashboardDataManager.getProgress()` and
-  `DashboardUIManager.updateProgress()` in
-  [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:190).
+   `DashboardUIManager.updateProgress()` in
+  [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html).
 
 On Voron there is an additional `/fan` endpoint exposed by
-[`PrinterDataFetcher.fetch_fan_data()`](VoronTemps/app.py:80) and consumed by
+`PrinterDataFetcher.fetch_fan_data()` in [`VoronTemps/app.py`](VoronTemps/app.py) and consumed by
 `DashboardUIManager.updateFanSpeed()` in
-[`VoronTemps/templates/index.html`](VoronTemps/templates/index.html:292). To
+[`VoronTemps/templates/index.html`](VoronTemps/templates/index.html). To
 show more fans, you would extend both the Python payload and the JS UI in the
 same pattern as with temperatures.
 
@@ -306,7 +306,7 @@ that is **ignored by version control**.
 
 1. In the `qidiwebcamdrestart/` folder, create a file
    `credentials.json` (this path is already listed in
-   [`.gitignore`](.gitignore:1)).
+   [`.gitignore`](.gitignore)).
 
    Minimum structure:
 
@@ -317,7 +317,7 @@ that is **ignored by version control**.
    ```
 
 2. Adjust the IP/username in
-   [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:35)
+   [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
    if needed:
 
    ```python
