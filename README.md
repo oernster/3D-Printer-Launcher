@@ -10,7 +10,7 @@
 
 If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
-[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
 Small Windows launcher for my 3D‑printer helper tools:
 
@@ -25,36 +25,32 @@ Moonraker settings is now fully configurable from the UI.
 
 End‑users are expected to download the pre‑built `.exe` from this repository’s
 GitHub Releases page. Building the executable from source is optional and is
-documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md:1).
+documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md).
 
 
 ## 1. Repository layout (for reference)
 
 The important pieces for day‑to‑day use are:
 
-- The launcher GUI entry point: [`main.py`](main.py:1)
-- Tool configuration model and JSON loader: [`config.ToolEntry`](config.py:13),
-  [`config.load_tools_config()`](config.py:68)
-- Main window UI: [`main_window.MainWindow()`](main_window.py:28)
-- Per‑tool runner widget: [`runner_widget.AppRunner()`](runner_widget.py:21)
+- The launcher GUI entry point: [`main.py`](main.py)
+- Tool configuration model and JSON loader: [`config.py`](config.py)
 - Tools/printers management dialog:
-  [`manage_tools_dialog.ManageToolsDialog()`](manage_tools_dialog.py:28)
-- Shared styling: [`styles.py`](styles.py:1)
-- Qidi temperature dashboard: [`qidi-temps/app.py`](qidi-temps/app.py:1)
-- Voron/Klipper temperature dashboard: [`VoronTemps/app.py`](VoronTemps/app.py:1)
+  [`manage_tools_dialog.py`](manage_tools_dialog.py)
+- Shared styling: [`styles.py`](styles.py)
+- Qidi temperature dashboard: [`qidi-temps/app.py`](qidi-temps/app.py)
+- Voron/Klipper temperature dashboard: [`VoronTemps/app.py`](VoronTemps/app.py)
 - Qidi `webcamd` restart helper:
-  [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py:1)
+  [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
 
 Each temperature dashboard also has its own more detailed README with
 background and older one‑off usage instructions:
 
-- [`qidi-temps/README.md`](https://github.com/oernster/3D-Printer-Launcher/tree/main/qidi-temps)
-- [`VoronTemps/README.md`](https://github.com/oernster/3D-Printer-Launcher/tree/main/VoronTemps)
+- [`qidi-temps/README.md`](qidi-temps/README.md)
+- [`VoronTemps/README.md`](VoronTemps/README.md)
 
 The launcher itself is implemented by
-[`main_window.MainWindow()`](main_window.py:28) and
-[`runner_widget.AppRunner()`](runner_widget.py:21), with some path/packaging
-helpers in [`app_spec.py`](app_spec.py:1).
+[`main_window.py`](main_window.py) and [`runner_widget.py`](runner_widget.py),
+with some path/packaging helpers in [`app_spec.py`](app_spec.py).
 
 
 ## 2. Downloading and running the launcher (end‑user)
@@ -79,7 +75,7 @@ below.
 1. Install Python 3.11+ from https://www.python.org/ and ensure “Add to PATH”
    is enabled during installation.
 2. Open **PowerShell** in the folder that contains the launcher `.exe`,
-   [`requirements.txt`](requirements.txt:1) and the three project folders.
+   [`requirements.txt`](requirements.txt) and the three project folders.
 3. Create a virtual environment (this will create a `venv/` folder):
 
    ```powershell
@@ -95,7 +91,7 @@ below.
    ```
 
 The launcher uses this environment automatically via
-[`AppSpec.venv_python`](app_spec.py:68), so you do **not** need to manually
+`AppSpec.venv_python`, so you do **not** need to manually
 activate it when starting tools through the UI.
 
 
@@ -108,7 +104,7 @@ UI.
 1. Start the 3D‑Printer‑Launcher.
 2. Click **Manage printers** in the top bar, or use the menu:
    **Tools → Manage printers / tools**. This opens
-   [`manage_tools_dialog.ManageToolsDialog()`](manage_tools_dialog.py:28).
+   [`manage_tools_dialog.py`](manage_tools_dialog.py).
 3. In the left list select an existing printer/tool or click **Add** to create
    a new one.
 4. On the right, configure:
@@ -131,21 +127,20 @@ UI.
    changes.
 
 Under the hood, these settings are stored in `tools_config.json` and mapped to
-[`config.ToolEntry`](config.py:13) objects. The Moonraker IP/host and API port
+`config.ToolEntry` objects. The Moonraker IP/host and API port
 are combined into the full
 `http://<host>:<api_port>/printer/objects/query` URL which is passed into the
 backend scripts via the `MOONRAKER_API_URL` environment variable.
 
 Most users never need to touch the Python code to change printers – use the
 Manage dialog instead. If you want to customise sensors or the HTML overlays
-themselves, see [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md:1).
+themselves, see [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
 
 ## 5. Using the launcher UI
 
 The main window is implemented by
-[`main_window.MainWindow()`](main_window.py:28), which creates one
-[`runner_widget.AppRunner()`](runner_widget.py:21) card per tool defined in
+[`main_window.py`](main_window.py), which creates one runner card per tool defined in
 `tools_config.json`.
 
 Each card shows:
@@ -154,10 +149,10 @@ Each card shows:
 - Status badge: **Stopped**, **Running**, **Error**, etc.
 - Buttons:
   - **Start / Run** – launches the script in the shared `venv` using
-    [`QProcess`](runner_widget.py:29)
+    `QProcess`
   - **Stop** – sends a polite terminate, then escalates to a kill quickly if needed
   - **Open log** – opens the latest log file created via
-    [`AppSpec.log_path`](app_spec.py:82)
+    `AppSpec.log_path`
   - **Open folder** – opens the underlying project directory in your file
     manager
 
@@ -168,11 +163,11 @@ The top bar provides:
 - **Open all logs** – opens each tool’s log file
 - **Clear log** – clears the live log pane
 - **☀ / 🌙** – switches between light and dark themes (see
-  [`MainWindow.set_theme()`](main_window.py:182))
+  `MainWindow.set_theme()`)
 
 The right‑hand pane shows merged live output from all running tools. Each line
 is prefixed with the tool name by
-[`MainWindow.append_log()`](main_window.py:196). Long lines automatically wrap
+`MainWindow.append_log()`. Long lines automatically wrap
 within the log view so they never run off the side of the window.
 
 
@@ -241,10 +236,10 @@ quickly start whichever tools you need.
 Most users should only ever need the pre‑built `.exe` from GitHub Releases.
 
 If you want to build or modify the launcher from source (for example to tweak
-styling in [`styles.py`](styles.py:1) or change which tools are launched by
+styling in [`styles.py`](styles.py) or change which tools are launched by
 default in `tools_config.json`), see the full developer guide in
-[`DEVELOPMENT_README.md`](DEVELOPMENT_README.md:1). That document covers the
-Nuitka build setup (via [`build_nuitka.py`](build_nuitka.py:1) or
-[`build_nuitka.cmd`](build_nuitka.cmd:1)) and the expected folder layout for
+[`DEVELOPMENT_README.md`](DEVELOPMENT_README.md). That document covers the
+Nuitka build setup (via [`build_nuitka.py`](build_nuitka.py) or
+[`build_nuitka.cmd`](build_nuitka.cmd)) and the expected folder layout for
 releasing your own executables.
 
