@@ -49,7 +49,7 @@ Each temperature dashboard also has its own more detailed README with
 background and older one‑off usage instructions:
 
 - [`qidi-temps/README.md`](qidi-temps/README.md:1)
-- [`VoronTemps/README.md`](VoronTemps/README.md:1)
+- [[`VoronTemps/README.md`](VoronTemps/README.md:1)](https://github.com/oernster/3D-Printer-Launcher/tree/main/VoronTemps)
 
 The launcher itself is implemented by
 [`main_window.MainWindow()`](main_window.py:28) and
