@@ -48,7 +48,7 @@ The important pieces for day‑to‑day use are:
 Each temperature dashboard also has its own more detailed README with
 background and older one‑off usage instructions:
 
-- [`qidi-temps/README.md`](https://github.com/oernster/3D-Printer-Launcher/tree/main/QidiTemps)
+- [`qidi-temps/README.md`](https://github.com/oernster/3D-Printer-Launcher/tree/main/Qidi-Temps)
 - [`VoronTemps/README.md`](https://github.com/oernster/3D-Printer-Launcher/tree/main/VoronTemps)
 
 The launcher itself is implemented by
