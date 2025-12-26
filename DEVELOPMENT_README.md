@@ -222,6 +222,11 @@ in [`README.md`](README.md).
 Available tools/printers are now configured via `tools_config.json` and the
 Manage dialog, not hard‑coded in `main.py`.
 
+Non‑programmer note: if your goal is just “add my printer”, use the launcher UI
+(Manage printers/tools). You only need the sections below if you want to share a
+pre-made `tools_config.json` or you are changing what sensors the dashboards
+display.
+
 ### 6.1 Editing via JSON
 
 - Structure is defined by `config.ToolEntry` in [`config.py`](config.py).

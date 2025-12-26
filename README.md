@@ -12,6 +12,10 @@ If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
 [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
+Non‑programmer note: you can add a new printer from the launcher UI (no code).
+Only follow the “customising sensors” parts of [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md)
+if your dashboard loads but some sensor values are missing.
+
 Small Windows launcher for my 3D‑printer helper tools:
 
 - Qidi temperature dashboard (Flask app served by Waitress WSGI)
