@@ -1,6 +1,6 @@
 # 3D‑Printer‑Launcher
 
-### [Friendly coffee donation here](https://www.paypal.com/donate/?hosted_button_id=R3DFLDWT2PFC4)
+### [Friendly coffee donation here](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
 <img width="1314" height="751" alt="{56F2392A-F4FB-4848-AA1E-2DFB0C938970}" src="https://github.com/user-attachments/assets/7c754947-c6b3-4b80-91bf-7af26788301f" />
 
