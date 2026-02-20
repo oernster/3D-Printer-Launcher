@@ -6,7 +6,7 @@
 
 <img width="1014" height="651" alt="{DA949606-A2CB-435C-BF8C-0D1F7CAD39E2}" src="https://github.com/user-attachments/assets/33d097ca-4289-4d00-88c3-61ed2024ff70" />
 
-<img width="1009" height="763" alt="{627EC487-3B61-44B9-9FEB-AF2AFF46B02A}" src="https://github.com/user-attachments/assets/7a16914d-b442-486f-b916-08666e109e2f" />
+<img width="1213" height="916" alt="{4F17803B-67BC-4657-9C28-D8450556E20F}" src="https://github.com/user-attachments/assets/43a91c0e-568d-4ac2-86d6-d096feb4b492" />
 
 If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
