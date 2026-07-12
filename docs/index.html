@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>3D-Printer-Launcher: One window for your Klipper temperature dashboards | Windows, OBS-ready</title>
+    <meta name="description" content="A small Windows launcher that starts your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window. Live logs, per-printer config, OBS Browser Source overlays. Free and open source.">
+    <meta name="keywords" content="3D printer launcher, Klipper temperature dashboard, Moonraker, Voron temps, Qidi temps, OBS browser source, printer temperature overlay, PySide6 launcher, Waitress Flask dashboard, 3D printing OBS overlay, free open source printer tool">
+    <meta name="author" content="Oliver Ernster">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://oernster.github.io/3D-Printer-Launcher/">
+
+    <!-- Theme / app identity -->
+    <meta name="theme-color" content="#0B0E14">
+    <meta name="color-scheme" content="dark">
+    <meta name="application-name" content="3D-Printer-Launcher">
+    <meta name="apple-mobile-web-app-title" content="3D-Printer-Launcher">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Icons -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="16x16" href="filament-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="filament-32.png">
+    <link rel="apple-touch-icon" href="filament-180.png">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="3D-Printer-Launcher: one window for your Klipper temperature dashboards">
+    <meta property="og:description" content="Start your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays. Free and open source.">
+    <meta property="og:image" content="https://oernster.github.io/3D-Printer-Launcher/filament-512.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="3D-Printer-Launcher app icon">
+    <meta property="og:url" content="https://oernster.github.io/3D-Printer-Launcher/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="3D-Printer-Launcher">
+    <meta property="og:locale" content="en_GB">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="3D-Printer-Launcher: one window for your Klipper temperature dashboards">
+    <meta name="twitter:description" content="Start your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays.">
+    <meta name="twitter:image" content="https://oernster.github.io/3D-Printer-Launcher/filament-512.png">
+    <meta name="twitter:image:alt" content="3D-Printer-Launcher app icon">
+
+    <style>
+        :root {
+            --bg: #0B0E14;
+            --panel: #0F1422;
+            --panel-2: #121A2C;
+            --text: #EAF0FF;
+            --muted: rgba(234,240,255,0.62);
+            --faint: rgba(234,240,255,0.42);
+            --border: rgba(255,255,255,0.10);
+            --border-strong: rgba(255,255,255,0.16);
+            --grad-a: #7C5CFF;
+            --grad-b: #FFB84D;
+            --accent: #FFB84D;
+            --ok: #3DDC97;
+            --stopped: #FF5D5D;
+            --log-bg: #070A10;
+            --log-text: #D7E1FF;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 96px 20px 64px;
+            text-align: center;
+        }
+
+        .hero-icon {
+            display: block;
+            width: 176px;
+            height: 176px;
+            border-radius: 38px;
+            margin: 0 auto 26px;
+            box-shadow: 0 26px 64px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        h1 {
+            font-size: 44px;
+            margin: 0 0 14px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .badge {
+            display: flex;
+            width: fit-content;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px;
+            margin: 0 auto 22px;
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--muted);
+            margin: 0 auto 28px;
+            max-width: 760px;
+        }
+
+        .actions a {
+            display: inline-block;
+            margin: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .primary {
+            color: #0B0E14;
+            background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+        }
+        .primary:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
+        .secondary { border: 1px solid var(--border); color: var(--text); }
+        .secondary:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+        .minor-detail {
+            margin-top: 28px;
+            font-size: 14px;
+            color: var(--faint);
+        }
+
+        .pitch {
+            max-width: 860px;
+            margin: 42px auto 0;
+            padding: 30px 30px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 14px;
+            text-align: left;
+        }
+
+        .pitch p {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .pitch strong { color: var(--accent); }
+        .pitch em { color: var(--muted); font-style: italic; }
+
+        .section { margin-top: 42px; }
+
+        .section h2 {
+            font-size: 24px;
+            margin: 0 0 10px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .section .lead {
+            color: var(--muted);
+            max-width: 720px;
+            margin: 0 auto 8px;
+        }
+
+        .shot {
+            margin: 28px auto 0;
+            max-width: 940px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .shot img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .shot figcaption {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--faint);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 28px;
+            text-align: left;
+        }
+
+        .grid.small {
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            text-align: center;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 20px;
+            transition: border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+        .card h3 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        #features .card h3,
+        #tools .card h3 {
+            color: var(--accent);
+        }
+
+        .steps {
+            max-width: 760px;
+            margin: 28px auto 0;
+            text-align: left;
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps li {
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px 16px 62px;
+            margin-bottom: 12px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .steps li strong { color: var(--text); }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: #0B0E14;
+            background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+        }
+
+        code {
+            font-family: Consolas, "Cascadia Mono", monospace;
+            background: var(--log-bg);
+            color: var(--log-text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 13px;
+        }
+
+        .prose {
+            max-width: 720px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .prose p { color: var(--muted); margin: 0 0 14px; }
+        .prose strong { color: var(--text); }
+
+        .faq {
+            max-width: 760px;
+            margin: 28px auto 0;
+            text-align: left;
+        }
+
+        .faq-item {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+        }
+
+        .faq-item h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+        .faq-item p { margin: 0; font-size: 14px; color: var(--muted); }
+        .faq-item a { color: var(--accent); text-decoration: none; }
+        .faq-item a:hover { text-decoration: underline; }
+
+        footer {
+            margin-top: 48px;
+            padding: 28px 20px 8px;
+            border-top: 1px solid var(--border);
+            color: var(--faint);
+            font-size: 13px;
+        }
+
+        footer a { color: var(--muted); text-decoration: none; }
+        footer a:hover { color: var(--accent); }
+
+        .sr-only {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="hero">
+        <img src="filament-512.png" class="hero-icon" width="176" height="176"
+             alt="3D-Printer-Launcher app icon" fetchpriority="high" decoding="async">
+
+        <div class="badge"><span class="badge-dot"></span> Windows desktop · Klipper / Moonraker · OBS-ready</div>
+
+        <h1>3D-Printer-Launcher</h1>
+
+        <p class="subtitle">
+            One window that starts your printer helper tools, your Qidi and Voron/Klipper
+            <strong style="color:var(--text)">temperature dashboards</strong> and a webcam restart helper,
+            shows their live logs side by side and serves each dashboard as a local page you can drop
+            straight into OBS.
+        </p>
+
+        <div class="actions">
+            <a class="primary" href="https://github.com/oernster/3D-Printer-Launcher/releases">Download</a>
+            <a class="secondary" href="https://github.com/oernster/3D-Printer-Launcher">View source</a>
+        </div>
+
+        <p class="minor-detail">
+            Free and open source. Runs locally. Talks to your printers over the Moonraker API on your own network.
+        </p>
+    </header>
+
+    <main>
+
+        <section class="pitch" aria-label="What makes 3D-Printer-Launcher useful">
+            <p>
+                A printer stream needs its temperatures on screen and a couple of helper scripts on hand.
+                Doing that by hand means <em>juggling terminals, virtual environments and ports every session</em>.
+                3D-Printer-Launcher turns all of it into <strong>one window with a Start button per tool</strong>.
+            </p>
+        </section>
+
+        <!-- Screenshot -->
+        <section class="section" id="screenshot" aria-labelledby="screenshot-h">
+            <h2 id="screenshot-h" class="sr-only">The launcher window</h2>
+            <figure class="shot">
+                <img src="screenshot-launcher.png"
+                     width="1314" height="751" loading="lazy" decoding="async"
+                     alt="The 3D-Printer-Launcher main window: one card per tool with status badges and Start, Stop, Open log and Open folder buttons, and a merged live log pane on the right.">
+                <figcaption>One card per tool, live merged logs on the right, a light/dark toggle in the top bar.</figcaption>
+            </figure>
+        </section>
+
+        <!-- What it does -->
+        <section class="section" id="features" aria-labelledby="features-h">
+            <h2 id="features-h">What the launcher does</h2>
+            <p class="lead">A single windowed app (PySide6/Qt) that runs each tool in its own environment and keeps you out of the terminal.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>One card per tool</h3>
+                    <p>Every printer helper gets a card with a status badge (Stopped, Running, Error) and Start, Stop, Open log and Open folder buttons.</p>
+                </div>
+                <div class="card">
+                    <h3>Live merged logs</h3>
+                    <p>A single pane shows output from every running tool, each line prefixed with the tool it came from and wrapped so nothing runs off the side.</p>
+                </div>
+                <div class="card">
+                    <h3>Start all, stop all</h3>
+                    <p>Bulk controls bring every dashboard up or down at once. The buttons enable and disable themselves based on what is running.</p>
+                </div>
+                <div class="card">
+                    <h3>Add printers from the UI</h3>
+                    <p>The Manage dialog edits printers and tools with no code: label, project folder, script, Moonraker host and port, dashboard port and tool kind.</p>
+                </div>
+                <div class="card">
+                    <h3>Moonraker under the hood</h3>
+                    <p>Host and port are combined into the Moonraker query URL and passed to each dashboard, so a printer move is a field edit, not a code change.</p>
+                </div>
+                <div class="card">
+                    <h3>Light and dark themes</h3>
+                    <p>A one-click theme toggle in the top bar, so the launcher matches the rest of your streaming setup.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The bundled tools -->
+        <section class="section" id="tools" aria-labelledby="tools-h">
+            <h2 id="tools-h">The tools it launches</h2>
+            <p class="lead">Three helpers ship in the box; add your own printers alongside them from the UI.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>Qidi temperature dashboard</h3>
+                    <p>A Flask app served by Waitress that renders live Qidi printer temperatures as a local web page.</p>
+                </div>
+                <div class="card">
+                    <h3>Voron / Klipper temperature dashboard</h3>
+                    <p>The same dashboard for any Voron or generic Klipper printer reachable over Moonraker. Run several at once on different ports.</p>
+                </div>
+                <div class="card">
+                    <h3>Qidi webcam restart helper</h3>
+                    <p>A one-shot SSH helper that restarts <code>webcamd</code> on a Qidi when the camera feed drops, with the single Run action a one-shot tool shows.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- OBS -->
+        <section class="section" id="obs" aria-labelledby="obs-h">
+            <h2 id="obs-h">Built for OBS overlays</h2>
+            <div class="prose">
+                <p>
+                    Each dashboard is a plain local <strong>HTTP</strong> page on its own port, so it drops straight into
+                    OBS Studio as a <strong>Browser Source</strong>. Add one source per printer, size it to a thin bar
+                    across the bottom of your canvas and your temperatures sit on the stream.
+                </p>
+                <p>
+                    Give every enabled printer a unique dashboard port and you can run and overlay several printers
+                    side by side. Always use <code>http://</code> URLs, not <code>https://</code>.
+                </p>
+            </div>
+        </section>
+
+        <!-- Getting started -->
+        <section class="section" id="start" aria-labelledby="start-h">
+            <h2 id="start-h">Getting started</h2>
+            <p class="lead">Download once, set up a shared environment once, then it is all buttons.</p>
+
+            <ol class="steps">
+                <li>Download the latest Windows <strong>.exe</strong> from the GitHub Releases page and keep it next to the <code>qidi-temps</code>, <code>VoronTemps</code> and <code>qidiwebcamdrestart</code> folders.</li>
+                <li>Install <strong>Python 3.11+</strong>, then create the shared <code>venv</code> once and <code>pip install -r requirements.txt</code>. The launcher uses that environment automatically.</li>
+                <li>Open <strong>Manage printers</strong> to point each card at your printer's Moonraker host, API port and dashboard port.</li>
+                <li>Press <strong>Start</strong> on a card, open the dashboard URL in a browser to check it, then add it to OBS as a Browser Source.</li>
+            </ol>
+
+            <div class="actions" style="margin-top:28px;">
+                <a class="primary" href="https://github.com/oernster/3D-Printer-Launcher/releases">Get the latest release</a>
+                <a class="secondary" href="https://github.com/oernster/3D-Printer-Launcher/blob/main/README.md">Read the full guide</a>
+            </div>
+        </section>
+
+        <!-- Why it exists -->
+        <section class="section" id="why" aria-labelledby="why-h">
+            <h2 id="why-h">Why it exists</h2>
+            <div class="prose">
+                <p>
+                    This is a personal streaming tool, built to put printer temperatures on screen without a ritual.
+                    The dashboards, the SSH restart and the OBS overlays were all things I ran by hand until launching
+                    them one at a time got tedious.
+                </p>
+                <p>
+                    So the launcher wraps them: one window, a Start button per tool, a shared environment and a manage
+                    dialog so a printer swap is a form edit rather than a code change. It is dogfood; the features are the
+                    ones I actually use each session.
+                </p>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="section" id="faq" aria-labelledby="faq-h">
+            <h2 id="faq-h">Frequently asked questions</h2>
+            <div class="faq">
+                <div class="faq-item">
+                    <h3>Is 3D-Printer-Launcher free?</h3>
+                    <p>Yes. It is free and open source, released under the GNU LGPL-3.0 licence.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What do I need before I start?</h3>
+                    <p>A Windows PC, Python 3.11+ for the shared environment, and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Do I have to edit code to add a printer?</h3>
+                    <p>No. Use the Manage printers dialog to set the label, folders, Moonraker host and port and dashboard port. You only touch the setup guide if a dashboard loads but some sensor values are missing.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I show more than one printer at once?</h3>
+                    <p>Yes. Give each enabled printer a unique dashboard port, start as many as you like and add one OBS Browser Source per printer.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Does it run on Linux or macOS?</h3>
+                    <p>The launcher is built and shipped for Windows. The source includes Nuitka build scripts for several Linux distributions and macOS if you want to build it yourself; see <a href="https://github.com/oernster/3D-Printer-Launcher/blob/main/DEVELOPMENT_README.md">DEVELOPMENT_README.md</a>.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <p class="sr-only">
+        3D-Printer-Launcher is a free, open-source Windows desktop launcher for 3D-printing helper tools. It starts
+        a Qidi temperature dashboard, a Voron or generic Klipper temperature dashboard and a Qidi webcam restart
+        helper from a single PySide6 window, showing merged live logs and per-tool Start, Stop, Open log and Open
+        folder controls. Printers and tools are configured from the UI over the Moonraker HTTP API. Each dashboard
+        is served as a local HTTP page that can be embedded in OBS Studio as a Browser Source overlay. Released
+        under the LGPL-3.0 licence.
+    </p>
+
+    <footer>
+        Created by Oliver Ernster &nbsp;·&nbsp; Python and PySide6 &nbsp;·&nbsp;
+        <a href="https://github.com/oernster/3D-Printer-Launcher/blob/main/LICENSE">LGPL-3.0</a> &nbsp;·&nbsp;
+        <a href="https://github.com/oernster/3D-Printer-Launcher">Source on GitHub</a> &nbsp;·&nbsp;
+        <a href="https://github.com/oernster/3D-Printer-Launcher/releases">Releases</a>
+    </footer>
+
+</div>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "WebSite",
+            "@id": "https://oernster.github.io/3D-Printer-Launcher/#website",
+            "url": "https://oernster.github.io/3D-Printer-Launcher/",
+            "name": "3D-Printer-Launcher",
+            "description": "A small Windows launcher that starts your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays.",
+            "inLanguage": "en-GB",
+            "publisher": { "@id": "https://oernster.github.io/3D-Printer-Launcher/#oliver" }
+        },
+        {
+            "@type": "Person",
+            "@id": "https://oernster.github.io/3D-Printer-Launcher/#oliver",
+            "name": "Oliver Ernster",
+            "url": "https://www.crankthecode.com",
+            "sameAs": [
+                "https://github.com/oernster",
+                "https://www.crankthecode.com"
+            ]
+        },
+        {
+            "@type": "SoftwareApplication",
+            "@id": "https://oernster.github.io/3D-Printer-Launcher/#app",
+            "name": "3D-Printer-Launcher",
+            "applicationCategory": "UtilitiesApplication",
+            "applicationSubCategory": "3D printing dashboard launcher and OBS overlay server",
+            "operatingSystem": "Windows",
+            "description": "A PySide6 desktop launcher that starts Qidi and Voron/Klipper temperature dashboards and a Qidi webcam restart helper from one window, with merged live logs, UI-based Moonraker configuration and OBS Browser Source overlays.",
+            "url": "https://oernster.github.io/3D-Printer-Launcher/",
+            "downloadUrl": "https://github.com/oernster/3D-Printer-Launcher/releases",
+            "installUrl": "https://github.com/oernster/3D-Printer-Launcher/releases",
+            "releaseNotes": "https://github.com/oernster/3D-Printer-Launcher/releases",
+            "softwareHelp": "https://github.com/oernster/3D-Printer-Launcher#readme",
+            "inLanguage": "en-GB",
+            "image": "https://oernster.github.io/3D-Printer-Launcher/filament-512.png",
+            "isAccessibleForFree": true,
+            "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
+            "author": { "@id": "https://oernster.github.io/3D-Printer-Launcher/#oliver" },
+            "creator": { "@id": "https://oernster.github.io/3D-Printer-Launcher/#oliver" },
+            "publisher": { "@id": "https://oernster.github.io/3D-Printer-Launcher/#oliver" },
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+            "featureList": [
+                "One window that launches multiple 3D-printing helper tools",
+                "Qidi temperature dashboard",
+                "Voron and generic Klipper temperature dashboard over Moonraker",
+                "Qidi webcam restart helper",
+                "Merged live log output with per-tool prefixes",
+                "Start all and stop all bulk controls",
+                "UI-based printer and Moonraker configuration, no code required",
+                "Local HTTP dashboards embeddable in OBS Studio as Browser Sources",
+                "Light and dark themes",
+                "Free and open source under LGPL-3.0"
+            ]
+        },
+        {
+            "@type": "FAQPage",
+            "@id": "https://oernster.github.io/3D-Printer-Launcher/#faq",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Is 3D-Printer-Launcher free?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is free and open source, released under the GNU LGPL-3.0 licence." }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What do I need before I start?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "A Windows PC, Python 3.11+ for the shared environment, and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays." }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Do I have to edit code to add a printer?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "No. Use the Manage printers dialog to set the label, folders, Moonraker host and port and dashboard port. You only touch the setup guide if a dashboard loads but some sensor values are missing." }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I show more than one printer at once?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "Yes. Give each enabled printer a unique dashboard port, start as many as you like and add one OBS Browser Source per printer." }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does it run on Linux or macOS?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "The launcher is built and shipped for Windows. The source includes Nuitka build scripts for several Linux distributions and macOS if you want to build it yourself." }
+                }
+            ]
+        }
+    ]
+}
+</script>
+
+</body>
+</html>
