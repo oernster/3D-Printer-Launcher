@@ -336,6 +336,85 @@
         .faq-item a { color: var(--accent); text-decoration: none; }
         .faq-item a:hover { text-decoration: underline; }
 
+        /* Download section */
+        .eyebrow {
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-size: 12.5px;
+            margin-bottom: 10px;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            max-width: 720px;
+            margin: 0 auto 8px;
+        }
+
+        .dl-version {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: 14px;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 4px 14px;
+        }
+
+        .downloads {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            max-width: 380px;
+            margin: 28px auto 0;
+        }
+
+        .dl-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .dl-card .ico { font-size: 30px; }
+        .dl-card h3 { margin: 4px 0 0; font-size: 18px; font-weight: 700; }
+        .dl-card .req { color: var(--muted); font-size: 13px; margin: 0; }
+
+        .dl-card a.primary {
+            display: inline-block;
+            margin: 14px auto 4px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .dl-card .meta {
+            color: var(--muted);
+            font-size: 12.5px;
+            min-height: 1.2em;
+            margin: 0;
+        }
+
+        .dl-card .how { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+
+        .dl-links {
+            text-align: center;
+            color: var(--faint);
+            font-size: 14px;
+            margin: 18px 0 0;
+        }
+
+        .dl-links a { color: var(--accent); text-decoration: none; }
+        .dl-links a:hover { text-decoration: underline; }
+
         footer {
             margin-top: 48px;
             padding: 28px 20px 8px;
@@ -379,7 +458,7 @@
         </p>
 
         <div class="actions">
-            <a class="primary" href="https://github.com/oernster/3D-Printer-Launcher/releases">Download</a>
+            <a class="primary" href="#download">Download</a>
             <a class="secondary" href="https://github.com/oernster/3D-Printer-Launcher">View source</a>
         </div>
 
@@ -479,6 +558,35 @@
             </div>
         </section>
 
+        <!-- Download -->
+        <section class="section" id="download" aria-labelledby="download-h">
+            <div class="eyebrow">Get 3D Printer Launcher</div>
+            <h2 id="download-h">Download 3D Printer Launcher</h2>
+            <p class="section-sub">Download the newest release with one click. Free and open source
+                under the LGPL-3.0 licence, built and shipped for Windows.</p>
+            <span class="dl-version" id="dl-version">Latest release</span>
+            <div class="downloads">
+                <div class="dl-card">
+                    <div class="ico">🪟</div>
+                    <h3>Windows</h3>
+                    <p class="req">Windows 10 or 11, 64-bit</p>
+                    <a class="primary" href="https://github.com/oernster/3D-Printer-Launcher/releases/latest/download/3D-Printer-Launcher.exe">
+                        Download for Windows</a>
+                    <p class="meta" data-asset="3D-Printer-Launcher.exe">Portable executable (.exe)</p>
+                    <p class="how">No installer: save it anywhere and run it.</p>
+                </div>
+            </div>
+            <p class="dl-links">
+                <a id="dl-whats-new" href="https://github.com/oernster/3D-Printer-Launcher/releases/latest">What's new in this release</a>
+                &nbsp;·&nbsp;
+                <a href="https://github.com/oernster/3D-Printer-Launcher/releases">All releases</a>
+                &nbsp;·&nbsp;
+                <a href="https://github.com/oernster/3D-Printer-Launcher">Source on GitHub</a>
+                &nbsp;·&nbsp;
+                <a href="https://github.com/oernster/3D-Printer-Launcher/blob/main/DEVELOPMENT_README.md">Build from source</a>
+            </p>
+        </section>
+
         <!-- Getting started -->
         <section class="section" id="start" aria-labelledby="start-h">
             <h2 id="start-h">Getting started</h2>
@@ -492,7 +600,7 @@
             </ol>
 
             <div class="actions" style="margin-top:28px;">
-                <a class="primary" href="https://github.com/oernster/3D-Printer-Launcher/releases">Get the latest release</a>
+                <a class="primary" href="#download">Get the latest release</a>
                 <a class="secondary" href="https://github.com/oernster/3D-Printer-Launcher/blob/main/README.md">Read the full guide</a>
             </div>
         </section>
@@ -651,6 +759,41 @@
         }
     ]
 }
+</script>
+
+<script>
+    // The download button never goes stale: it points at GitHub's releases/latest/download
+    // redirect, which always serves the newest release's asset (the asset name is version-free
+    // by design). This script only decorates the page with live details: the version chip, the
+    // release date and the executable's size, fetched from the GitHub API. If the call fails
+    // (offline, rate-limited), the static text above stands on its own.
+    (function () {
+        var api = 'https://api.github.com/repos/oernster/3D-Printer-Launcher/releases/latest';
+        fetch(api).then(function (r) {
+            if (!r.ok) { throw new Error('release lookup failed'); }
+            return r.json();
+        }).then(function (rel) {
+            var version = (rel.tag_name || '').replace(/^v/, '');
+            if (version) {
+                var when = '';
+                if (rel.published_at) {
+                    when = ' · ' + new Date(rel.published_at).toLocaleDateString(undefined,
+                        {day: 'numeric', month: 'long', year: 'numeric'});
+                }
+                document.getElementById('dl-version').textContent = 'Version ' + version + when;
+            }
+            if (rel.html_url) {
+                document.getElementById('dl-whats-new').href = rel.html_url;
+            }
+            (rel.assets || []).forEach(function (asset) {
+                var meta = document.querySelector('[data-asset="' + asset.name + '"]');
+                if (meta && asset.size) {
+                    var mb = (asset.size / (1024 * 1024)).toFixed(1);
+                    meta.textContent = meta.textContent + ' · ' + mb + ' MB';
+                }
+            });
+        }).catch(function () { /* The static page already says everything essential. */ });
+    })();
 </script>
 
 </body>
