@@ -316,6 +316,8 @@
 
         .prose p { color: var(--muted); margin: 0 0 14px; }
         .prose strong { color: var(--text); }
+        .prose a { color: var(--accent); text-decoration: none; }
+        .prose a:hover { text-decoration: underline; }
 
         .faq {
             max-width: 760px;
@@ -486,7 +488,7 @@
             <figure class="shot">
                 <img src="screenshot-launcher.png"
                      width="1314" height="751" loading="lazy" decoding="async"
-                     alt="The 3D-Printer-Launcher main window: one card per tool with status badges and Start, Stop, Open log and Open folder buttons, and a merged live log pane on the right.">
+                     alt="The 3D-Printer-Launcher main window: one card per tool with status badges and Start, Stop, Open log and Open folder buttons, beside a merged live log pane on the right.">
                 <figcaption>One card per tool, live merged logs on the right, a light/dark toggle in the top bar.</figcaption>
             </figure>
         </section>
@@ -610,7 +612,7 @@
 
         <!-- Why it exists -->
         <section class="section" id="why" aria-labelledby="why-h">
-            <h2 id="why-h">Why it exists</h2>
+            <h2 id="why-h">Why this exists</h2>
             <div class="prose">
                 <p>
                     This is a personal streaming tool, built to put printer temperatures on screen without a ritual.
@@ -622,6 +624,7 @@
                     dialog so a printer swap is a form edit rather than a code change. It is dogfood; the features are the
                     ones I actually use each session.
                 </p>
+                <p>Full reasoning at <a href="https://www.crankthecode.com/posts/3D-printer-launcher">crankthecode.com</a>.</p>
             </div>
         </section>
 
@@ -635,7 +638,7 @@
                 </div>
                 <div class="faq-item">
                     <h3>What do I need before I start?</h3>
-                    <p>A Windows PC, Python 3.11+ for the shared environment, and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays.</p>
+                    <p>A Windows PC, Python 3.11+ for the shared environment and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays.</p>
                 </div>
                 <div class="faq-item">
                     <h3>Do I have to edit code to add a printer?</h3>
@@ -741,7 +744,7 @@
                 {
                     "@type": "Question",
                     "name": "What do I need before I start?",
-                    "acceptedAnswer": { "@type": "Answer", "text": "A Windows PC, Python 3.11+ for the shared environment, and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays." }
+                    "acceptedAnswer": { "@type": "Answer", "text": "A Windows PC, Python 3.11+ for the shared environment and one or more Klipper printers reachable over the Moonraker API on your network. OBS Studio is optional and only needed for stream overlays." }
                 },
                 {
                     "@type": "Question",
@@ -767,9 +770,9 @@
 <script>
     // The download button never goes stale: it points at GitHub's releases/latest/download
     // redirect, which always serves the newest release's asset (the asset name is version-free
-    // by design). This script only decorates the page with live details: the version chip, the
-    // release date and the executable's size, fetched from the GitHub API. If the call fails
-    // (offline, rate-limited), the static text above stands on its own.
+    // by design). This script only decorates the page with live details: the version chip and
+    // the executable's size, fetched from the GitHub API. If the call fails (offline,
+    // rate-limited), the static text above stands on its own.
     (function () {
         var api = 'https://api.github.com/repos/oernster/3D-Printer-Launcher/releases/latest';
         fetch(api).then(function (r) {
@@ -778,12 +781,7 @@
         }).then(function (rel) {
             var version = (rel.tag_name || '').replace(/^v/, '');
             if (version) {
-                var when = '';
-                if (rel.published_at) {
-                    when = ' · ' + new Date(rel.published_at).toLocaleDateString(undefined,
-                        {day: 'numeric', month: 'long', year: 'numeric'});
-                }
-                document.getElementById('dl-version').textContent = 'Version ' + version + when;
+                document.getElementById('dl-version').textContent = 'Version ' + version;
             }
             if (rel.html_url) {
                 document.getElementById('dl-whats-new').href = rel.html_url;
