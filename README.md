@@ -31,6 +31,9 @@ End‑users are expected to download the pre‑built `.exe` from this repository
 GitHub Releases page. Building the executable from source is optional and is
 documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md).
 
+See [`TECH_DEBT.md`](TECH_DEBT.md) for what is still open, what is deliberately left and what
+only looks like debt.
+
 
 ## 1. Repository layout (for reference)
 
