@@ -1,0 +1,45 @@
+[project]
+name = "3d-printer-launcher"
+description = "Launcher for Klipper printer dashboards and helper tools"
+requires-python = ">=3.11"
+# The version is never written here. VERSION at the repository root is the
+# single source of truth and version.py reads it.
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+exclude = ["venv", "dist", "build", "docs", ".ruff_cache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "SIM", "UP", "RUF", "BLE", "LOG", "S", "C4", "I"]
+ignore = [
+    # Contradicts Black's formatting of slices.
+    "E203",
+    # asserts are the point of a test suite.
+    "S101",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The bundled tools must extend sys.path before the shared modules exist on
+# it, so their imports cannot all sit at the top of the file.
+"VoronTemps/app.py" = ["E402"]
+"qidi-temps/app.py" = ["E402"]
+"qidiwebcamdrestart/webcamdrestart.py" = ["E402"]
+# The test suite does the same to import the flat modules at the root.
+"tests/conftest.py" = ["E402"]
+"tests/test_ui_smoke.py" = ["E402"]
+# S104 reads four-part version strings such as "0.0.0.0" and the allow-list
+# entry naming the bind-to-everything address, as bind addresses. Nothing in
+# the test suite opens a socket.
+"tests/test_version.py" = ["S104"]
+"tests/test_no_personal_addresses.py" = ["S104"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

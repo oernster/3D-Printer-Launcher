@@ -1,0 +1,27 @@
+[flake8]
+# Matches the Black default line length so the two tools agree.
+max-line-length = 88
+
+# E203 (whitespace before ':') and W503 (line break before binary operator)
+# are the two pycodestyle rules that contradict Black's output.
+extend-ignore = E203, W503
+
+# The bundled tools run as their own processes with their own directory as
+# sys.path[0], so each has to extend sys.path before the shared modules at the
+# launcher root are importable. Their imports cannot all sit at the top.
+# The test suite does the same to import the flat modules at the root.
+per-file-ignores =
+    VoronTemps/app.py:E402
+    qidi-temps/app.py:E402
+    qidiwebcamdrestart/webcamdrestart.py:E402
+    tests/conftest.py:E402
+    tests/test_ui_smoke.py:E402
+
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    dist,
+    build,
+    .ruff_cache,
+    .pytest_cache

@@ -23,7 +23,7 @@ Small Windows launcher for my 3D‑printer helper tools:
 - Qidi `webcamd` SSH restart helper
 
 The launcher is a single windowed app (PySide6/Qt) that starts each tool in its
-own Python virtual environment, shows live log output, and gives quick access
+own Python virtual environment, shows live log output and gives quick access
 to log files and project folders. The list of printers/tools and their
 Moonraker settings is now fully configurable from the UI.
 
@@ -43,6 +43,8 @@ The important pieces for day‑to‑day use are:
 - Tool configuration model and JSON loader: [`config.py`](config.py)
 - Tools/printers management dialog:
   [`manage_tools_dialog.py`](manage_tools_dialog.py)
+- Shared Moonraker address handling used by every tool:
+  [`moonraker.py`](moonraker.py)
 - Shared styling: [`styles.py`](styles.py)
 - Qidi temperature dashboard: [`qidi-temps/app.py`](qidi-temps/app.py)
 - Voron/Klipper temperature dashboard: [`VoronTemps/app.py`](VoronTemps/app.py)
@@ -109,7 +111,7 @@ All Klipper printers are accessed via the Moonraker HTTP API. You configure
 UI.
 
 1. Start the 3D‑Printer‑Launcher.
-2. Click **Manage printers** in the top bar, or use the menu:
+2. Click **Manage printers** in the top bar or use the menu:
    **Tools → Manage printers / tools**. This opens
    [`manage_tools_dialog.py`](manage_tools_dialog.py).
 3. In the left list select an existing printer/tool or click **Add** to create
@@ -121,7 +123,7 @@ UI.
      `VoronTemps` or `qidi-temps`).
    - **Script** – entrypoint script file (e.g. `app.py`).
    - **Moonraker IP/host** – just the hostname or IP of the printer running
-     Moonraker (e.g. `192.168.1.226`).
+     Moonraker (e.g. `voron.local`).
    - **Moonraker API port** – TCP port where Moonraker listens (default `7125`).
     - **Dashboard port** – local dashboard UI port (e.g. `5000`, `5001`, `5002`);
       use a different value per printer if you want multiple dashboards at the
@@ -133,11 +135,25 @@ UI.
 5. Click **Save changes**. The main window updates immediately to reflect your
    changes.
 
-Under the hood, these settings are stored in `tools_config.json` and mapped to
-`config.ToolEntry` objects. The Moonraker IP/host and API port
-are combined into the full
-`http://<host>:<api_port>/printer/objects/query` URL which is passed into the
-backend scripts via the `MOONRAKER_API_URL` environment variable.
+Under the hood, these settings are stored in your own `tools_config.json` and
+mapped to `config.ToolEntry` objects. The Moonraker IP/host and API port are
+combined into the full `http://<host>:<api_port>/printer/objects/query` URL,
+which is passed into the backend scripts via the `MOONRAKER_API_URL`
+environment variable. You store the address once, as a host and a port and
+the URL is derived from it.
+
+That file is **yours** and it is kept outside the application folder so an
+update cannot overwrite it:
+
+- Windows: `%APPDATA%\3D-Printer-Launcher\tools_config.json`
+- macOS and Linux: `~/.config/3D-Printer-Launcher/tools_config.json`
+
+**Tools → Open configuration folder** opens that location for you. It is
+created on first run from the shipped
+[`tools_config.example.json`](tools_config.example.json) template, which
+contains placeholder addresses only, so a fresh install never points at
+somebody else's printer. If you previously kept a `tools_config.json` beside
+the application, it is migrated across automatically the first time.
 
 Most users never need to touch the Python code to change printers – use the
 Manage dialog instead. If you want to customise sensors or the HTML overlays
@@ -147,8 +163,10 @@ themselves, see [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 ## 5. Using the launcher UI
 
 The main window is implemented by
-[`main_window.py`](main_window.py), which creates one runner card per tool defined in
-`tools_config.json`.
+[`main_window.py`](main_window.py), which creates one runner card per enabled
+tool in your configuration. The title bar shows the version you are running
+and **Tools → About** repeats it alongside the path to your configuration
+file, which is worth quoting in any bug report.
 
 Each card shows:
 
@@ -219,7 +237,7 @@ By default the repository config maps like:
    card.
 2. Verify in a browser that `http://127.0.0.1:<dashboard-port>/` shows the
    dashboard.
-3. In **OBS Studio** repeat the Browser Source steps above, but set the **URL**
+3. In **OBS Studio** repeat the Browser Source steps above but set the **URL**
    to the appropriate local dashboard port and name the source something like
    `VoronTridentTemps`.
 
@@ -244,7 +262,7 @@ Most users should only ever need the pre‑built `.exe` from GitHub Releases.
 
 If you want to build or modify the launcher from source (for example to tweak
 styling in [`styles.py`](styles.py) or change which tools are launched by
-default in `tools_config.json`), see the full developer guide in
+default), see the full developer guide in
 [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md). That document covers the
 Nuitka build setup (via [`build_nuitka.py`](build_nuitka.py) or
 [`build_nuitka.cmd`](build_nuitka.cmd)) and the expected folder layout for

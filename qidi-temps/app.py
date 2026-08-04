@@ -1,215 +1,222 @@
-from flask import Flask, render_template, jsonify
-from waitress import serve
-import aiohttp
+"""Qidi temperature dashboard, launched as its own process.
+
+Shares the Moonraker transport with the other bundled tools so the query,
+the response parsing and the failure handling have one implementation.
+"""
+
+from __future__ import annotations
+
+import argparse
 import asyncio
 import logging
 import os
-import argparse
-from typing import Dict, List, Any, Optional
+import sys
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
+from flask import Flask, jsonify, render_template
+from waitress import serve
 
-# Configure logging
+# This tool runs as its own process with its own directory as sys.path[0], so
+# the launcher root has to be added before the shared modules are importable.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from moonraker import URL_ENV_VAR, display_host, resolve_query_url
+from moonraker_client import MoonrakerClient, status_of
+
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+TOOL_DIR = Path(__file__).resolve().parent
 
-@dataclass
+DEFAULT_PRINTER_LABEL = "Qidi"
+
+DEFAULT_BIND_HOST = "127.0.0.1"
+DEFAULT_DASHBOARD_PORT = 5001
+
+# Waitress threads. Enough to keep the polling endpoints responsive for a
+# single-viewer dashboard without reserving pointless workers.
+SERVER_THREADS = 8
+
+LABEL_ENV_VAR = "LAUNCHER_TOOL_LABEL"
+
+# Klipper reports print progress as a 0.0 to 1.0 fraction.
+PERCENT_SCALE = 100
+PERCENT_DECIMALS = 1
+
+VIRTUAL_SDCARD_FIELDS = [
+    "file_path",
+    "progress",
+    "is_active",
+    "file_position",
+    "file_size",
+]
+
+MISSING_READING = "N/A"
+
+
+@dataclass(frozen=True)
 class SensorConfig:
-    """Configuration for a temperature sensor"""
+    """One Klipper object shown on the temperature panel."""
+
     name: str
-    attributes: List[str]
+    attributes: list[str]
     display_name: str
 
 
-class APIClient:
-    """Client for interacting with the 3D printer API"""
-    
-    def __init__(self, api_url: str, timeout: int = 10):
-        self.api_url = api_url
-        self.timeout = timeout
-    
-    async def _make_request(self, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Make a request to the API with the given payload"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    self.api_url, 
-                    json=payload, 
-                    timeout=self.timeout
-                ) as response:
-                    response.raise_for_status()
-                    return await response.json()
-        except aiohttp.ClientError as e:
-            logger.error(f"API request error: {e}")
-            return None
-        except asyncio.TimeoutError:
-            logger.error(f"API request timed out after {self.timeout} seconds")
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error during API request: {e}")
-            return None
+# The sensors a Qidi running Klipper exposes.
+TEMPERATURE_SENSORS: tuple[SensorConfig, ...] = (
+    SensorConfig("extruder", ["temperature", "target"], "Extruder"),
+    SensorConfig("heater_bed", ["temperature", "target"], "Bed"),
+    SensorConfig("heater_generic chamber", ["temperature"], "Chamber"),
+)
+
+
+def _as_percentage(fraction: object) -> float:
+    """Convert a Klipper 0.0 to 1.0 fraction to a rounded percentage."""
+
+    if not isinstance(fraction, (int, float)):
+        return 0.0
+    return round(fraction * PERCENT_SCALE, PERCENT_DECIMALS)
 
 
 class PrinterDataService:
-    """Service for fetching and processing printer data"""
-    
-    def __init__(self, api_client: APIClient):
-        self.api_client = api_client
-        
-        # Define temperature sensors configuration
-        self.temperature_sensors = [
-            SensorConfig("extruder", ["temperature", "target"], "Extruder"),
-            SensorConfig("heater_bed", ["temperature", "target"], "Bed"),
-            SensorConfig("heater_generic chamber", ["temperature"], "Chamber")
-        ]
-        
-        # Build the sensors query object
-        self.sensors_query = {
-            sensor.name: sensor.attributes for sensor in self.temperature_sensors
-        }
-    
-    async def get_temperatures(self) -> Dict[str, Any]:
-        """Get temperature data for all configured sensors"""
-        payload = {"objects": self.sensors_query}
-        data = await self.api_client._make_request(payload)
-        
-        if not data:
-            return {sensor.name: {} for sensor in self.temperature_sensors}
-        
-        sensors_data = data.get("result", {}).get("status", {})
-        temperatures = {}
-        
-        for sensor in self.temperature_sensors:
-            sensor_data = sensors_data.get(sensor.name, {})
-            temperatures[sensor.name] = {
-                attr: sensor_data.get(attr) for attr in sensor.attributes
-            }
-        
-        return temperatures
-    
-    async def get_progress(self) -> Dict[str, Any]:
-        """Get print job progress data"""
-        payload = {
-            "objects": {
-                "virtual_sdcard": [
-                    "file_path", 
-                    "progress", 
-                    "is_active", 
-                    "file_position", 
-                    "file_size"
-                ]
-            }
-        }
-        
-        data = await self.api_client._make_request(payload)
-        
-        if not data:
-            return {"progress_percentage": 0, "is_active": False}
-        
-        logger.debug("Progress API response: %s", data)
-        
-        progress_data = data.get("result", {}).get("status", {}).get("virtual_sdcard", {})
-        
+    """Fetches and shapes the readings the Qidi dashboard displays."""
+
+    def __init__(self, client: MoonrakerClient) -> None:
+        self.client = client
+        self.sensors_query = {s.name: s.attributes for s in TEMPERATURE_SENSORS}
+
+    async def get_temperatures(self) -> dict[str, Any]:
+        """Return every configured temperature reading."""
+
+        data = await self.client.query(self.sensors_query)
+        if data is None:
+            return {sensor.name: {} for sensor in TEMPERATURE_SENSORS}
+
+        sensors_data = status_of(data)
         return {
-            "progress_percentage": round((progress_data.get("progress") or 0) * 100, 1),
-            "file_path": progress_data.get("file_path", "N/A"),
-            "is_active": progress_data.get("is_active", False),
-            "file_position": progress_data.get("file_position", 0),
-            "file_size": progress_data.get("file_size", 0)
+            sensor.name: {
+                attr: sensors_data.get(sensor.name, {}).get(attr)
+                for attr in sensor.attributes
+            }
+            for sensor in TEMPERATURE_SENSORS
+        }
+
+    async def get_progress(self) -> dict[str, Any]:
+        """Return the current print job's progress."""
+
+        data = await self.client.query({"virtual_sdcard": VIRTUAL_SDCARD_FIELDS})
+        if data is None:
+            return {"progress_percentage": 0, "is_active": False}
+
+        sdcard = status_of(data).get("virtual_sdcard", {})
+        return {
+            "progress_percentage": _as_percentage(sdcard.get("progress")),
+            "file_path": sdcard.get("file_path", MISSING_READING),
+            "is_active": sdcard.get("is_active", False),
+            "file_position": sdcard.get("file_position", 0),
+            "file_size": sdcard.get("file_size", 0),
         }
 
 
 class PrinterDashboardApp:
-    """Flask application for the 3D printer dashboard"""
-    
-    def __init__(self, data_service: PrinterDataService):
+    """The Flask application serving the Qidi dashboard."""
+
+    def __init__(self, data_service: PrinterDataService, api_url: str) -> None:
         self.app = Flask(__name__)
         self.data_service = data_service
+
+        self.app.config["PRINTER_LABEL"] = (
+            os.environ.get(LABEL_ENV_VAR) or DEFAULT_PRINTER_LABEL
+        )
+        self.app.config["MOONRAKER_URL"] = api_url
+        self.app.config["MOONRAKER_HOST"] = display_host(api_url)
+
         self._register_routes()
-        
-        # Configure template folder if running in development mode
-        if not os.path.exists(os.path.join(os.path.dirname(__file__), "templates")):
+
+        # Support running with the templates beside this file rather than in
+        # a templates/ subdirectory.
+        if not (TOOL_DIR / "templates").exists():
             self.app.template_folder = "."
-    
-    def _register_routes(self):
-        """Register all Flask routes"""
-        
-        @self.app.route('/temperatures')
+
+    def _register_routes(self) -> None:
+        @self.app.route("/temperatures")
         async def get_temperatures():
-            temperatures = await self.data_service.get_temperatures()
-            return jsonify(temperatures)
-            
-        @self.app.route('/progress')
+            return jsonify(await self.data_service.get_temperatures())
+
+        @self.app.route("/progress")
         async def get_progress():
-            progress = await self.data_service.get_progress()
-            return jsonify(progress)
-        
-        @self.app.route('/')
+            return jsonify(await self.data_service.get_progress())
+
+        @self.app.route("/")
         def index():
-            return render_template('index.html')
-    
-    def run(self, host: str = "127.0.0.1", port: int = 5001):
-        """Run the Flask application via a production WSGI server (waitress)."""
-        serve(self.app, host=host, port=port, threads=8)
+            return render_template("index.html")
+
+    def run(self, host: str = DEFAULT_BIND_HOST, port: int = DEFAULT_DASHBOARD_PORT):
+        """Serve the dashboard with waitress rather than Flask's dev server."""
+
+        serve(self.app, host=host, port=port, threads=SERVER_THREADS)
 
 
-def create_app(config: Dict[str, Any] = None) -> PrinterDashboardApp:
-    """Factory function to create and configure the application"""
-    if config is None:
-        config = {}
-    
-    api_url = config.get("api_url", "http://localhost:7125/printer/objects/query")
-    timeout = config.get("timeout", 10)
-    
-    # Create the API client
-    api_client = APIClient(api_url, timeout)
-    
-    # Create the data service
-    data_service = PrinterDataService(api_client)
-    
-    # Create and return the application
-    return PrinterDashboardApp(data_service)
+def create_app(api_url: str) -> PrinterDashboardApp:
+    """Build the dashboard application for the given Moonraker URL."""
+
+    return PrinterDashboardApp(PrinterDataService(MoonrakerClient(api_url)), api_url)
 
 
-# Main application entry point
-if __name__ == "__main__":
-    # Allow the launcher (and manual runs) to override host/port via CLI,
-    # while keeping environment variables as sensible defaults. This brings
-    # Qidi in line with the Voron dashboard so both obey the "--port" passed
-    # by the launcher.
-
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Qidi printer temperature dashboard")
     parser.add_argument(
+        "--moonraker-url",
+        dest="moonraker_url",
+        help=(
+            "Full Moonraker API URL. When omitted, the "
+            f"{URL_ENV_VAR} environment variable set by the launcher is used, "
+            "then config.json in this directory."
+        ),
+    )
+    parser.add_argument(
         "--host",
-        default=os.environ.get("HOST", "127.0.0.1"),
-        help="Host interface for the Flask server (default: 127.0.0.1)",
+        default=DEFAULT_BIND_HOST,
+        help=f"Host interface for the dashboard (default: {DEFAULT_BIND_HOST})",
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.environ.get("PORT", "5001")),
-        help="Port for the Flask server (default: 5001)",
+        default=DEFAULT_DASHBOARD_PORT,
+        help=f"Port for the dashboard (default: {DEFAULT_DASHBOARD_PORT})",
     )
-    # Debug flag intentionally removed/ignored for packaged usage.
+    return parser
 
-    args = parser.parse_args()
 
-    # Configuration
-    config = {
-        "api_url": os.environ.get(
-            "MOONRAKER_API_URL", 
-            "http://192.168.1.120:7125/printer/objects/query"
-        ),
-        "timeout": int(os.environ.get("API_TIMEOUT", "10"))
-    }
-    
-    # Ensure debug logging is disabled in packaged usage.
-    logger.setLevel(logging.INFO)
-    
-    # Create and run the application
-    app = create_app(config)
-    app.run(host=args.host, port=args.port)
+def main() -> int:
+    args = build_parser().parse_args()
+
+    moonraker_url = resolve_query_url(args.moonraker_url, TOOL_DIR)
+    if not moonraker_url:
+        logger.error(
+            "No Moonraker address configured. Set the printer's host in the "
+            "launcher (Manage printers / tools) or pass --moonraker-url."
+        )
+        return 1
+
+    logger.info("Using Moonraker API URL: %s", moonraker_url)
+
+    dashboard = create_app(moonraker_url)
+
+    if not asyncio.run(dashboard.data_service.client.probe()):
+        logger.warning(
+            "Moonraker at %s appears unreachable; starting the dashboard anyway",
+            moonraker_url,
+        )
+
+    dashboard.run(host=args.host, port=args.port)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

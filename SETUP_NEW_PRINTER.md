@@ -1,4 +1,4 @@
-# Setting up a new printer / customising sensors, overlays, and Qidi helpers
+# Setting up a new printer / customising sensors, overlays and Qidi helpers
 
 This document explains how to adapt the dashboards for a **different printer**
 or add/remove sensors in both the **Python backends** and the
@@ -14,7 +14,7 @@ It applies to:
 - Qidi webcam restart helper: [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
 
 My own Voron config repo is public at
-https://github.com/oernster/VT350, but the patterns below work regardless of
+https://github.com/oernster/VT350 but the patterns below work regardless of
 where your printer configs live.
 
 
@@ -32,7 +32,8 @@ need to edit any Python or HTML.
      - `VoronTemps` for Klipper/Moonraker printers
      - `qidi-temps` for Qidi temps
    - **Script**: `app.py`
-   - **Moonraker IP/host**: the printer’s IP address (example: `192.168.1.226`)
+   - **Moonraker IP/host**: the printer's hostname or IP address (example:
+     `voron.local`)
    - **Moonraker API port**: usually `7125`
    - **Dashboard port**: pick a free local port like `5002` (must be unique per card)
 5. Click **Save changes**.
@@ -194,12 +195,12 @@ pick it up.
 If you are new to Klipper: you do **not** need to guess sensor names.
 Everything the dashboard can show comes from your Klipper configuration.
 
-### Step 1 — Open your `printer.cfg`
+### Step 1: Open your `printer.cfg`
 
 Open your Klipper config in Mainsail/Fluidd (or via SSH) and locate the
 `printer.cfg` file.
 
-### Step 2 — Find the temperature-related sections
+### Step 2: Find the temperature-related sections
 
 Use search (Ctrl+F) for these section headers:
 
@@ -224,9 +225,9 @@ pin: ...
 sensor_type: temperature_mcu
 ```
 
-### Step 3 — Convert those sections into dashboard “sensor names”
+### Step 3: Convert those sections into dashboard “sensor names”
 
-The dashboard pulls data through Moonraker, and Moonraker uses specific object
+The dashboard pulls data through Moonraker and Moonraker uses specific object
 names.
 
 1. **`[temperature_sensor NAME]`**
@@ -250,7 +251,7 @@ names.
    - Add that full string to `temperature_sensors` if you want to show it.
    - Example: `[temperature_fan MCU_Fans]` → `"temperature_fan MCU_Fans": ["temperature"]`
 
-### Step 4 — Decide what you actually want to display
+### Step 4: Decide what you actually want to display
 
 Most people start with:
 
@@ -259,7 +260,7 @@ Most people start with:
 
 Everything else (electronics bay, Pi, toolhead board, etc.) is optional.
 
-### Step 5 — Update the dashboard code (Python + HTML)
+### Step 5: Update the dashboard code (Python + HTML)
 
 The Voron dashboard has **two places** you may need to update:
 
@@ -348,7 +349,7 @@ The names `Internals`, `NucBox`, `NH36`, `Cartographer` are **my personal
 examples**. Your printer probably does not have these.
 
 If you leave names in this list that don’t exist on your printer, the dashboard
-won’t break, but those sensors will show as `N/A` (or appear blank).
+won’t break but those sensors will show as `N/A` (or appear blank).
 
 ### Simplest safe setup (Voron/Klipper)
 
@@ -498,18 +499,14 @@ that is **ignored by version control**.
    }
    ```
 
-2. Adjust the IP/username in
-   [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
-   if needed:
+2. The printer's address is **not** edited into the script. The helper takes
+   it from the same place as every other tool: the **Moonraker IP/host** field
+   on that tool's card in **Manage printers / tools**. The launcher passes it
+   through and you can override it by hand with `--host` when running the
+   script directly.
 
-   ```python
-   ip_address = "192.168.1.120"
-   username = "root"
-   password = _load_password()
-   ```
-
-   The helper will fail with a clear error if `credentials.json` is
-   missing or malformed, and no password is ever stored in the repo.
+   The helper exits with a clear message and no SSH attempt, if either the
+   address or the password is missing. No password is ever stored in the repo.
 
 
 ## 6. Creating a new dashboard folder for another printer (optional)

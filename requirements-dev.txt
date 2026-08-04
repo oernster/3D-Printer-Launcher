@@ -1,0 +1,17 @@
+# Development and verification tooling. The runtime dependencies are in
+# requirements.txt; install both to work on the project:
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# The gate that must pass before a commit:
+#
+#   python -m black --check .
+#   python -m flake8 .
+#   python -m ruff check .
+#   python -m pytest
+
+black
+flake8
+ruff
+pytest
+pytest-cov

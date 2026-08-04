@@ -1,27 +1,42 @@
 # runner_widget.py
 from __future__ import annotations
 
-import time
+import logging
 import re
-from typing import Callable
+import time
+from collections.abc import Callable
 
-from PySide6.QtCore import Qt, QProcess, QTimer
+from PySide6.QtCore import QProcess, Qt, QTimer
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from app_spec import AppSpec
+from app_spec import KIND_ONESHOT, AppSpec
 
+logger = logging.getLogger(__name__)
 
 # Strip ANSI colour / control codes (e.g. from Flask, paramiko, remote shells)
 ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+# How long to wait after terminate() before escalating to kill(). A dashboard
+# holds a listening socket and must let go promptly or the port stays bound; a
+# one-shot task is usually mid-SSH and is given longer to finish cleanly.
+NORMAL_KILL_DELAY_MS = 500
+ONESHOT_KILL_DELAY_MS = 2000
 
 
 class AppRunner(QWidget):
     """Card UI + process controller for one app (venv python + live logging)."""
 
-    def __init__(self, spec: AppSpec, log_sink: Callable[[str, str], None], parent=None):
+    def __init__(
+        self, spec: AppSpec, log_sink: Callable[[str, str], None], parent=None
+    ):
         super().__init__(parent)
         self.spec = spec
         self.log_sink = log_sink
@@ -74,7 +89,7 @@ class AppRunner(QWidget):
         # Special-case UI for one-shot tools (e.g. webcam restart): show a
         # single primary action button and hide Stop. This is driven by the
         # spec.kind field so users can rename tools without breaking behaviour.
-        if getattr(self.spec, "kind", "normal") == "oneshot":
+        if self.spec.kind == KIND_ONESHOT:
             self.btn_start.setText("Run")
             self.btn_stop.hide()
 
@@ -115,7 +130,7 @@ class AppRunner(QWidget):
         if not ok:
             self._set_status("Error", kind="error")
             self._log(f"[launcher] {msg}\n")
-            QMessageBox.warning(self, f"{self.spec.name} – cannot start", msg)
+            QMessageBox.warning(self, f"{self.spec.name} - cannot start", msg)
             self._refresh_buttons()
             return
 
@@ -123,11 +138,11 @@ class AppRunner(QWidget):
         self.proc.setProgram(str(self.spec.venv_python))
 
         args = [str(self.spec.script_path)]
-        # Optional per-printer Moonraker port (for Klipper dashboards). When
+        # Optional per-printer dashboard port (for Klipper dashboards). When
         # specified, append a --port argument so multiple dashboards can run
         # concurrently on different ports.
-        if getattr(self.spec, "moonraker_port", None):
-            args.extend(["--port", str(self.spec.moonraker_port)])
+        if self.spec.dashboard_port:
+            args.extend(["--port", str(self.spec.dashboard_port)])
         self.proc.setArguments(args)
 
         # ✅ Force UTF-8 for child process stdout/stderr on Windows and inject
@@ -137,21 +152,20 @@ class AppRunner(QWidget):
         env.insert("PYTHONUTF8", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
         # Used by dashboard apps (e.g. VoronTemps, Qidi temps) to display a
-        # human‑friendly printer name in the HTML.
+        # human-friendly printer name in the HTML.
         env.insert("LAUNCHER_TOOL_LABEL", self.spec.name)
-        url = getattr(self.spec, "moonraker_url", None)
-        if url:
-            env.insert("MOONRAKER_API_URL", url)
+        if self.spec.moonraker_url:
+            env.insert("MOONRAKER_API_URL", self.spec.moonraker_url)
         self.proc.setProcessEnvironment(env)
 
         self._log(f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} START ====\n")
         self._log(f"[launcher] Using: {self.spec.venv_python}\n")
         self._log(f"[launcher] Working dir: {self.spec.project_dir}\n")
         self._log(f"[launcher] Script: {self.spec.script_path}\n")
-        if getattr(self.spec, "moonraker_url", None):
+        if self.spec.moonraker_url:
             self._log(f"[launcher] Moonraker URL: {self.spec.moonraker_url}\n")
-        if getattr(self.spec, "moonraker_port", None):
-            self._log(f"[launcher] Dashboard port: {self.spec.moonraker_port}\n")
+        if self.spec.dashboard_port:
+            self._log(f"[launcher] Dashboard port: {self.spec.dashboard_port}\n")
 
         self._set_status("Starting…", kind="warn")
         self.proc.start()
@@ -170,8 +184,11 @@ class AppRunner(QWidget):
         # escalate to a hard kill quickly.
         self.proc.terminate()
 
-        kind = getattr(self.spec, "kind", "normal")
-        kill_delay_ms = 500 if kind != "oneshot" else 2000
+        kill_delay_ms = (
+            ONESHOT_KILL_DELAY_MS
+            if self.spec.kind == KIND_ONESHOT
+            else NORMAL_KILL_DELAY_MS
+        )
         QTimer.singleShot(kill_delay_ms, self._kill_if_needed)
         self._refresh_buttons()
 
@@ -190,8 +207,10 @@ class AppRunner(QWidget):
             self.spec.project_dir.mkdir(parents=True, exist_ok=True)
             with open(self.spec.log_path, "a", encoding="utf-8", errors="replace") as f:
                 f.write(text)
-        except Exception:
-            pass
+        except OSError:
+            # Falls back to the on-screen log only. A read-only or full disk
+            # must not stop the user seeing the output of a running tool.
+            logger.warning("Could not append to %s", self.spec.log_path, exc_info=True)
         self.log_sink(self.spec.name, text)
 
     def _on_ready_read(self) -> None:
@@ -203,14 +222,18 @@ class AppRunner(QWidget):
         self._set_status("Running", kind="ok")
         try:
             pid = int(self.proc.processId())
-        except Exception:
+        except (TypeError, ValueError):
+            # Falls back to omitting the PID line. Qt reports 0 or None on
+            # platforms that do not expose one; the process is still running.
             pid = 0
         if pid:
             self._log(f"[launcher] PID: {pid}\n")
         self._refresh_buttons()
 
     def _on_finished(self, exit_code: int, _exit_status) -> None:
-        self._log(f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} EXIT code={exit_code} ====\n")
+        self._log(
+            f"\n==== {time.strftime('%Y-%m-%d %H:%M:%S')} EXIT code={exit_code} ====\n"
+        )
         self._set_status("Stopped", kind="stopped")
         self._refresh_buttons()
 
@@ -233,8 +256,10 @@ class AppRunner(QWidget):
     def open_log(self) -> None:
         try:
             self.spec.log_path.touch(exist_ok=True)
-        except Exception:
-            pass
+        except OSError:
+            # Falls through to the open below, which shows the platform's own
+            # "file not found" rather than a traceback from the launcher.
+            logger.warning("Could not create %s", self.spec.log_path, exc_info=True)
         QDesktopServices.openUrl(self.spec.log_path.as_uri())
 
     def open_folder(self) -> None:

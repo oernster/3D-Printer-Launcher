@@ -1,0 +1,49 @@
+{
+  "_readme": [
+    "Template for the launcher's tool list. It is copied to your per-user",
+    "config directory the first time the launcher starts, and the copy is the",
+    "file the application reads and writes. This template is never written to.",
+    "Per-user location: %APPDATA%/3D-Printer-Launcher/tools_config.json on",
+    "Windows, $XDG_CONFIG_HOME/3D-Printer-Launcher/tools_config.json (or",
+    "~/.config/3D-Printer-Launcher/tools_config.json) elsewhere.",
+    "Set moonraker_host to your printer's hostname or IP address, either by",
+    "editing the copy or through Manage printers / tools in the application.",
+    "The Moonraker query URL is derived from moonraker_host and",
+    "moonraker_api_port, so there is no separate URL to keep in step."
+  ],
+  "tools": [
+    {
+      "dashboard_port": 5000,
+      "enabled": true,
+      "id": "qidi-temps",
+      "kind": "normal",
+      "label": "Qidi Temps",
+      "moonraker_api_port": 7125,
+      "moonraker_host": "",
+      "project_dir": "qidi-temps",
+      "script": "app.py"
+    },
+    {
+      "dashboard_port": null,
+      "enabled": true,
+      "id": "qidi-webcamd-restart",
+      "kind": "oneshot",
+      "label": "Qidi Webcamd restart",
+      "moonraker_api_port": 7125,
+      "moonraker_host": "",
+      "project_dir": "qidiwebcamdrestart",
+      "script": "webcamdrestart.py"
+    },
+    {
+      "dashboard_port": 5001,
+      "enabled": true,
+      "id": "voron-temps",
+      "kind": "normal",
+      "label": "Voron Temps",
+      "moonraker_api_port": 7125,
+      "moonraker_host": "",
+      "project_dir": "VoronTemps",
+      "script": "app.py"
+    }
+  ]
+}

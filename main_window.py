@@ -1,37 +1,46 @@
 # main_window.py
 from __future__ import annotations
 
-from pathlib import Path
-
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QDesktopServices, QAction
+from PySide6.QtGui import QAction, QDesktopServices
 from PySide6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
-    QLabel,
-    QPushButton,
-    QPlainTextEdit,
-    QScrollArea,
     QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QScrollArea,
     QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
-from app_spec import AppSpec, BASE_DIR
-from config import load_tools_config
-from runner_widget import AppRunner
+from app_spec import BASE_DIR, AppSpec
+from config import config_path, enabled_specs
 from manage_tools_dialog import ManageToolsDialog
+from runner_widget import AppRunner
 from styles import build_styles
+from version import APP_NAME, __version__
+
+# Default window geometry, in logical pixels.
+MIN_WINDOW_WIDTH = 980
+MIN_WINDOW_HEIGHT = 700
+
+# Initial splitter split, roughly half and half of MIN_WINDOW_WIDTH.
+LEFT_PANEL_INITIAL_WIDTH = 500
+RIGHT_PANEL_INITIAL_WIDTH = 480
+LEFT_PANEL_MIN_WIDTH = 360
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, specs: list[AppSpec]):
+    def __init__(self, specs: list[AppSpec] | None = None):
         super().__init__()
-        self.setWindowTitle("3D Printer Launcher")
+        self.setWindowTitle(f"{APP_NAME} {__version__}")
         # Increase default height further so the cards and log have extra space
         # on modern displays. This is roughly +6cm over the original height.
-        self.setMinimumSize(QSize(980, 700))
+        self.setMinimumSize(QSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT))
 
         self.theme = "dark"
         self.setStyleSheet(build_styles(self.theme))
@@ -56,7 +65,7 @@ class MainWindow(QMainWindow):
         left.setObjectName("LeftPanel")
         # Prevent the right log panel from visually "crushing" this section
         # when the window is resized or on unusual DPI setups.
-        left.setMinimumWidth(360)
+        left.setMinimumWidth(LEFT_PANEL_MIN_WIDTH)
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(12, 12, 12, 12)
         left_layout.setSpacing(12)
@@ -124,7 +133,7 @@ class MainWindow(QMainWindow):
 
         self.cards_layout: QVBoxLayout = cards_layout
         self.runners: list[AppRunner] = []
-        self._build_runners(specs)
+        self._build_runners(specs if specs is not None else enabled_specs())
 
         scroll = QScrollArea()
         scroll.setObjectName("CardsScroll")
@@ -160,8 +169,7 @@ class MainWindow(QMainWindow):
 
         # Give an initial split with the divider pushed a bit further to the
         # right so the left tools column has more space by default.
-        # (500px / 480px ≈ 51% / 49% of 980px total.)
-        splitter.setSizes([500, 480])
+        splitter.setSizes([LEFT_PANEL_INITIAL_WIDTH, RIGHT_PANEL_INITIAL_WIDTH])
 
         root.addWidget(splitter)
         self.setCentralWidget(central)
@@ -178,10 +186,18 @@ class MainWindow(QMainWindow):
         act_manage.triggered.connect(self.open_manage_tools)
         menu.addAction(act_manage)
 
+        act_open_config = QAction("Open configuration folder", self)
+        act_open_config.triggered.connect(self.open_config_folder)
+        menu.addAction(act_open_config)
+
         # License link (opens the bundled LGPLv3 LICENSE file)
         act_license = QAction("View LGPL-3 License", self)
         act_license.triggered.connect(self.open_license)
         menu.addAction(act_license)
+
+        act_about = QAction(f"About {APP_NAME}", self)
+        act_about.triggered.connect(self.show_about)
+        menu.addAction(act_about)
 
         menu.addSeparator()
         act_light = QAction("Light mode", self)
@@ -245,9 +261,24 @@ class MainWindow(QMainWindow):
         if lic.exists():
             QDesktopServices.openUrl(lic.as_uri())
 
+    def open_config_folder(self) -> None:
+        """Open the per-user folder holding the live configuration."""
+
+        folder = config_path().parent
+        folder.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(folder.as_uri())
+
+    def show_about(self) -> None:
+        """Show the version and where the live configuration is kept."""
+
+        QMessageBox.about(
+            self,
+            f"About {APP_NAME}",
+            f"{APP_NAME} {__version__}\n\nConfiguration: {config_path()}",
+        )
+
     def open_manage_tools(self) -> None:
-        """Open the Manage Tools dialog.
-        """
+        """Open the Manage Tools dialog."""
 
         dlg = ManageToolsDialog(self, on_saved=self._reload_tools_from_config)
         dlg.exec()
@@ -274,29 +305,13 @@ class MainWindow(QMainWindow):
         self._refresh_all_buttons()
 
     def _reload_tools_from_config(self) -> None:
-        """Reload enabled tools from tools_config.json and refresh the UI.
+        """Reload enabled tools from the live config and refresh the UI.
 
         This is used as a callback from the ManageToolsDialog so that changes
         take effect immediately without restarting the application.
         """
 
-        tools = load_tools_config()
-        specs: list[AppSpec] = []
-        for t in tools:
-            if not t.enabled:
-                continue
-            specs.append(
-                AppSpec(
-                    name=t.label,
-                    project_dir=BASE_DIR / t.project_dir,
-                    script=t.script,
-                    kind=t.kind,
-                    moonraker_url=getattr(t, "moonraker_url", None),
-                    moonraker_port=getattr(t, "moonraker_port", None),
-                )
-            )
-
-        self._build_runners(specs)
+        self._build_runners(enabled_specs())
 
     def _refresh_all_buttons(self) -> None:
         """Update Start all / Stop all button enabled state.

@@ -208,3 +208,9 @@ __marimo__/
 
 # Local credentials / secrets (not for version control)
 qidiwebcamdrestart/credentials.json
+
+# Live launcher configuration. The application keeps the real file in a
+# per-user directory (%APPDATA% or ~/.config); this entry only covers a copy
+# left beside the app by an older version, which holds a real printer
+# address. The tracked template is tools_config.example.json.
+tools_config.json

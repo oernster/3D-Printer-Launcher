@@ -1,9 +1,9 @@
 # app_spec.py
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
 
 
 def _compute_base_dir() -> Path:
@@ -11,7 +11,7 @@ def _compute_base_dir() -> Path:
 
     When running from source, this is the directory containing this file.
     When running as a compiled onefile Nuitka executable, module
-    ``__file__`` points into the temporary extraction directory, but we
+    ``__file__`` points into the temporary extraction directory but we
     want the directory that contains the *outer* executable so that
     ``qidi-temps/``, ``qidiwebcamdrestart/``, etc. are found correctly.
     """
@@ -34,7 +34,7 @@ def _compute_base_dir() -> Path:
         # ``main.exe`` directly alongside those folders.
         #
         # To support both layouts, we probe `exe_dir` first, then its
-        # parent, and pick the first one that actually contains the
+        # parent and pick the first one that actually contains the
         # tool subdirectories.
         candidates = [exe_dir, exe_dir.parent]
         needed = {"qidi-temps", "qidiwebcamdrestart", "VoronTemps"}
@@ -55,6 +55,14 @@ def _compute_base_dir() -> Path:
 # Base directory of the 3Dprinterlauncher project
 BASE_DIR = _compute_base_dir()
 
+# Behavioural kinds a tool can have. "normal" is a long-running process with
+# Start and Stop; "oneshot" runs to completion and shows a single Run action.
+KIND_NORMAL = "normal"
+KIND_ONESHOT = "oneshot"
+
+# Every kind the configuration and the Manage dialog accept, in display order.
+TOOL_KINDS = (KIND_NORMAL, KIND_ONESHOT)
+
 
 @dataclass(frozen=True)
 class AppSpec:
@@ -62,13 +70,14 @@ class AppSpec:
     project_dir: Path
     script: str
     # Optional behavioural hint used by the UI/runner; for example
-    # "oneshot" hides the Stop button and uses a different label.
-    kind: str = "normal"
+    # KIND_ONESHOT hides the Stop button and uses a different label.
+    kind: str = KIND_NORMAL
     # Optional per-tool Moonraker settings for Klipper dashboards.
     # When provided, the launcher will inject MOONRAKER_API_URL into the
     # child process environment and pass "--port" on the command line.
     moonraker_url: str | None = None
-    moonraker_port: int | None = None
+    # Local port the tool's own dashboard should listen on.
+    dashboard_port: int | None = None
 
     @property
     def venv_python(self) -> Path:
@@ -109,5 +118,7 @@ class AppSpec:
 
     @property
     def log_path(self) -> Path:
-        safe = "".join(c if c.isalnum() or c in "-_." else "_" for c in self.name.lower())
+        safe = "".join(
+            c if c.isalnum() or c in "-_." else "_" for c in self.name.lower()
+        )
         return self.project_dir / f"launcher_{safe}.log"
