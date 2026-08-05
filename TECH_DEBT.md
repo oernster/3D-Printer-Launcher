@@ -9,40 +9,16 @@ whole repository: the launcher at root, the three bundled tools
 the GitHub Pages site under `docs/`.
 
 This is a small project (roughly 2,600 lines across sixteen modules, plus a
-test suite). It now has a `VERSION` file read by both the application and the
-build scripts, a `pytest` suite covering the configuration and Moonraker
-logic, an offscreen smoke test over the Qt layer and a structural size rule.
-`black`, `flake8` and `ruff` all run clean.
+test suite). It has a `VERSION` file read by both the application and the build
+scripts, a `pytest` suite covering the configuration and Moonraker logic, an
+offscreen smoke test over the Qt layer, a structural size rule, a
+`requirements.txt` that names the five packages the code imports rather than a
+frozen snapshot of one machine, plus a GitHub Actions workflow that runs the
+whole gate on every push and pull request.
 
----
-
-## 1. Nothing enforces the verification gate
-
-There is a gate and it passes; running it is entirely a matter of remembering
-to:
-
-```
-python -m black --check .
-python -m flake8 .
-python -m ruff check .
-python -m pytest
-```
-
-There is no `.github/workflows/`, no pre-commit hook and no other automation.
-The project has already been through one round where a partly-finished edit
-left two modules that would raise on construction: `runner_widget.py`
-referenced constants that were never defined; `manage_tools_dialog.py` was
-still written against a replaced configuration shape. Neither was caught until
-the tools were run by hand, because nothing ran them.
-
-The tests that now exist close that specific hole, though only if something
-runs them. A single GitHub Actions workflow on push, installing both requirements
-files and running the four commands above, is perhaps twenty lines and removes
-the need to remember anything.
-
-Weighed honestly: for a single-maintainer project this is lower value than it
-would be on a team. It is listed as real because this repository is published
-and takes outside contributions, so the gate has readers other than its author.
+**There is no open technical debt.** The two sections below are the standing
+record of what was weighed and deliberately left alone, so the same ground is
+not covered again.
 
 ---
 

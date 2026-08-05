@@ -79,6 +79,12 @@ python -m pytest
 All four must pass. The Qt tests run offscreen via `QT_QPA_PLATFORM`, so no
 display is needed and the application is never launched.
 
+The same four commands run in CI on every push and pull request, from
+[`.github/workflows/gate.yml`](.github/workflows/gate.yml), on `windows-latest`
+against Python 3.11 (the floor in `pyproject.toml`) and 3.13. Each command is
+its own step, so a red run names which one failed. Change one list and change
+the other.
+
 [`tests/test_module_size.py`](tests/test_module_size.py) enforces a 400‑line
 cap per module. When a module breaches it, split it rather than raising the
 cap.
