@@ -11,6 +11,7 @@ version the application does not report.
 
 from __future__ import annotations
 
+import importlib.util
 import shutil
 import subprocess
 import sys
@@ -66,7 +67,35 @@ def build_command() -> list[str]:
     ]
 
 
+def require_nuitka() -> None:
+    """Stop with something actionable when the packaging tool is absent.
+
+    Nuitka is build tooling rather than a runtime dependency, so it is declared
+    in requirements-dev.txt and a virtual environment built from
+    requirements.txt alone will not have it. Left to itself the build reports
+    only "No module named nuitka" wrapped in a CalledProcessError traceback,
+    which says nothing about where to get it.
+    """
+
+    if importlib.util.find_spec("nuitka") is not None:
+        return
+
+    print(
+        "Nuitka is not installed in this interpreter:\n"
+        f"  {sys.executable}\n\n"
+        "It is build tooling rather than a runtime dependency, so it is\n"
+        "declared in requirements-dev.txt. Install it with:\n\n"
+        "  python -m pip install -r requirements-dev.txt\n",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+
+
 def main() -> None:
+    # Checked before the output directory is touched: a missing build tool must
+    # not cost the previous build.
+    require_nuitka()
+
     if DIST_DIR.is_dir():
         print("Removing existing dist directory...")
         shutil.rmtree(DIST_DIR)
