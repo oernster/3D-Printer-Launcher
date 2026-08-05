@@ -15,3 +15,9 @@ flake8
 ruff
 pytest
 pytest-cov
+
+# Packaging. Nuitka is invoked as a tool by the build scripts rather than
+# imported, so it is not a runtime dependency; ordered-set and zstandard are
+# its own dependencies and are left to pip rather than named here.
+Nuitka>=2.8.9
+

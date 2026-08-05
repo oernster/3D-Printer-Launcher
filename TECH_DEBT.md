@@ -16,32 +16,7 @@ logic, an offscreen smoke test over the Qt layer and a structural size rule.
 
 ---
 
-## 1. `requirements.txt` is a machine snapshot, not a dependency declaration
-
-The file is a full `pip freeze` of a development virtualenv: 37 exact pins
-covering direct dependencies, transitive dependencies and build tooling with
-nothing distinguishing them.
-
-Two concrete consequences:
-
-- `pygame` and `requests` are pinned but nothing in the tree imports either.
-  They are residue from something the venv was once used for. Anyone
-  installing the project builds and downloads them for nothing.
-- `Nuitka`, `ordered-set` and `zstandard` are build tooling, not runtime
-  dependencies; a user installing the application to run it gets the whole
-  compiler toolchain.
-
-The proportionate fix is a short `requirements.txt` naming only what is
-imported (`PySide6`, `Flask`, `waitress`, `aiohttp`, `paramiko`) with floors
-rather than exact pins, plus the build tooling moved alongside the existing
-`requirements-dev.txt`. Verify by installing into a clean virtualenv and
-running the gate.
-
-This is worth doing but it is not urgent. The current file works; it is merely
-larger and slower than it needs to be, and misleading about what the project
-actually depends on.
-
-## 2. Nothing enforces the verification gate
+## 1. Nothing enforces the verification gate
 
 There is a gate and it passes; running it is entirely a matter of remembering
 to:
@@ -66,9 +41,8 @@ files and running the four commands above, is perhaps twenty lines and removes
 the need to remember anything.
 
 Weighed honestly: for a single-maintainer project this is lower value than it
-would be on a team, which is why it sits below item 1 in effort but is listed
-as real. The argument for doing it is that this repository is published and
-takes outside contributions.
+would be on a team. It is listed as real because this repository is published
+and takes outside contributions, so the gate has readers other than its author.
 
 ---
 

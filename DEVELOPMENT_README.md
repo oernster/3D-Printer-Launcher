@@ -103,17 +103,20 @@ These instructions assume Windows 10/11 and PowerShell.
    .\venv\Scripts\activate
    ```
 
-4. Install runtime dependencies and build‑time tools:
+4. Install runtime dependencies and build-time tools:
 
    ```powershell
    pip install --upgrade pip
    pip install -r requirements.txt
    pip install -r requirements-dev.txt
-   pip install nuitka ordered-set zstandard
    ```
 
-   `requirements-dev.txt` holds the verification tooling (`black`, `flake8`,
-   `ruff`, `pytest`) described in section 1.2.
+   `requirements.txt` names the five packages the project imports (`PySide6`,
+   `Flask`, `waitress`, `aiohttp`, `paramiko`) at floors rather than pins,
+   leaving their transitive dependencies to pip. `requirements-dev.txt` holds the
+   verification tooling (`black`, `flake8`, `ruff`, `pytest`) described in
+   section 1.2 plus `Nuitka` for packaging. Nuitka pulls in `ordered-set` and
+   `zstandard` itself, so neither needs installing by hand.
 
 The dashboards are Flask apps served by a production WSGI server (Waitress), so
 there is no Flask development server involved at runtime.
