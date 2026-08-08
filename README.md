@@ -1,4 +1,4 @@
-# 3D‑Printer‑Launcher
+# 3D-Printer-Launcher
 
 ### [Friendly coffee donation here](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
@@ -12,11 +12,11 @@ If you want to change which sensors are shown or set up a new dashboard for a
 different printer, see the setup guide at the repo root:
 [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
-Non‑programmer note: you can add a new printer from the launcher UI (no code).
-Only follow the “customising sensors” parts of [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md)
+Non-programmer note: you can add a new printer from the launcher UI (no code).
+Only follow the "customising sensors" parts of [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md)
 if your dashboard loads but some sensor values are missing.
 
-Small Windows launcher for my 3D‑printer helper tools:
+Small Windows launcher for my 3D-printer helper tools:
 
 - Qidi temperature dashboard (Flask app served by Waitress WSGI)
 - Voron/Generic Klipper temperature dashboard (Flask app served by Waitress WSGI)
@@ -27,7 +27,7 @@ own Python virtual environment, shows live log output and gives quick access
 to log files and project folders. The list of printers/tools and their
 Moonraker settings is now fully configurable from the UI.
 
-End‑users are expected to download the pre‑built `.exe` from this repository’s
+End-users are expected to download the pre-built `.exe` from this repository's
 GitHub Releases page. Building the executable from source is optional and is
 documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md).
 
@@ -35,9 +35,25 @@ See [`TECH_DEBT.md`](TECH_DEBT.md) for what is still open, what is deliberately 
 only looks like debt.
 
 
+## Who it is for and who it is not for
+
+It is for someone running Qidi or Voron/Klipper printers on Windows who wants one
+window to start their temperature dashboards, watch live log output and reach the log
+files and project folders without hunting for them. The printer list and its Moonraker
+settings are editable from the UI, so adding another printer needs no code.
+
+It is not a slicer and not a printer control surface: Mainsail and Fluidd already do
+that job, so this launcher sits alongside them rather than replacing them. It needs
+Moonraker reachable on your network to show any temperature at all. The packaged
+release is Windows-only. The bundled tools are the author's own set (two temperature
+dashboards plus a Qidi `webcamd` SSH restart helper), so a printer outside that shape
+means configuring sensors by hand, as covered in
+[`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
+
+
 ## 1. Repository layout (for reference)
 
-The important pieces for day‑to‑day use are:
+The important pieces for day-to-day use are:
 
 - The launcher GUI entry point: [`main.py`](main.py)
 - Tool configuration model and JSON loader: [`config.py`](config.py)
@@ -52,7 +68,7 @@ The important pieces for day‑to‑day use are:
   [`qidiwebcamdrestart/webcamdrestart.py`](qidiwebcamdrestart/webcamdrestart.py)
 
 Each temperature dashboard also has its own more detailed README with
-background and older one‑off usage instructions:
+background and older one-off usage instructions:
 
 - [`qidi-temps/README.md`](qidi-temps/README.md)
 - [`VoronTemps/README.md`](VoronTemps/README.md)
@@ -62,16 +78,16 @@ The launcher itself is implemented by
 with some path/packaging helpers in [`app_spec.py`](app_spec.py).
 
 
-## 2. Downloading and running the launcher (end‑user)
+## 2. Downloading and running the launcher (end-user)
 
-1. Go to this repository’s **Releases** page on GitHub and download the latest
+1. Go to this repository's **Releases** page on GitHub and download the latest
    Windows executable (`.exe`).
 2. If you cloned the repo or downloaded the full source ZIP from GitHub, the
    `.exe` should live alongside the `qidi-temps/`, `VoronTemps/` and
-   `qidiwebcamdrestart/` folders – you do not need to move anything. If you move
+   `qidiwebcamdrestart/` folders: you do not need to move anything. If you move
    the `.exe` somewhere else, keep it next to those three folders so the
    launcher can locate the tools.
-3. Double‑click the `.exe` to start the **3D‑Printer‑Launcher** window.
+3. Double-click the `.exe` to start the **3D-Printer-Launcher** window.
 
 The launcher expects a shared Python virtual environment called `venv` to live
 next to these folders. If you only downloaded the `.exe` from Releases and not
@@ -79,9 +95,9 @@ the full repository, you still need to create this `venv` once as described
 below.
 
 
-## 3. One‑time Python environment setup (Windows)
+## 3. One-time Python environment setup (Windows)
 
-1. Install Python 3.11+ from https://www.python.org/ and ensure “Add to PATH”
+1. Install Python 3.11+ from https://www.python.org/ and ensure "Add to PATH"
    is enabled during installation.
 2. Open **PowerShell** in the folder that contains the launcher `.exe`,
    [`requirements.txt`](requirements.txt) and the three project folders.
@@ -104,33 +120,33 @@ The launcher uses this environment automatically via
 activate it when starting tools through the UI.
 
 
-## 4. Configuring printers and Moonraker (UI‑based)
+## 4. Configuring printers and Moonraker (UI-based)
 
 All Klipper printers are accessed via the Moonraker HTTP API. You configure
 *which* printers exist and how to contact each one entirely from the launcher
 UI.
 
-1. Start the 3D‑Printer‑Launcher.
+1. Start the 3D-Printer-Launcher.
 2. Click **Manage printers** in the top bar or use the menu:
    **Tools → Manage printers / tools**. This opens
    [`manage_tools_dialog.py`](manage_tools_dialog.py).
 3. In the left list select an existing printer/tool or click **Add** to create
    a new one.
 4. On the right, configure:
-   - **Label** – how the card appears in the main window (e.g. `Voron 2.4`,
-     `Qidi X‑Plus`).
-   - **Project dir** – the folder containing the backend script (typically
+   - **Label**: how the card appears in the main window (e.g. `Voron 2.4`,
+     `Qidi X-Plus`).
+   - **Project dir**: the folder containing the backend script (typically
      `VoronTemps` or `qidi-temps`).
-   - **Script** – entrypoint script file (e.g. `app.py`).
-   - **Moonraker IP/host** – just the hostname or IP of the printer running
+   - **Script**: entrypoint script file (e.g. `app.py`).
+   - **Moonraker IP/host**: just the hostname or IP of the printer running
      Moonraker (e.g. `voron.local`).
-   - **Moonraker API port** – TCP port where Moonraker listens (default `7125`).
-    - **Dashboard port** – local dashboard UI port (e.g. `5000`, `5001`, `5002`);
+   - **Moonraker API port**: TCP port where Moonraker listens (default `7125`).
+    - **Dashboard port**: local dashboard UI port (e.g. `5000`, `5001`, `5002`);
       use a different value per printer if you want multiple dashboards at the
       same time.
-   - **Kind** – `normal` for regular tools, `oneshot` for one‑shot helpers
+   - **Kind**: `normal` for regular tools, `oneshot` for one-shot helpers
      (this hides the Stop button and shows a single Run action).
-   - **Webcam password** – only relevant for the Qidi Webcam restart tool; this
+   - **Webcam password**: only relevant for the Qidi Webcam restart tool; this
      writes a local `qidiwebcamdrestart/credentials.json` file ignored by Git.
 5. Click **Save changes**. The main window updates immediately to reflect your
    changes.
@@ -155,7 +171,7 @@ contains placeholder addresses only, so a fresh install never points at
 somebody else's printer. If you previously kept a `tools_config.json` beside
 the application, it is migrated across automatically the first time.
 
-Most users never need to touch the Python code to change printers – use the
+Most users never need to touch the Python code to change printers: use the
 Manage dialog instead. If you want to customise sensors or the HTML overlays
 themselves, see [`SETUP_NEW_PRINTER.md`](SETUP_NEW_PRINTER.md).
 
@@ -170,27 +186,27 @@ file, which is worth quoting in any bug report.
 
 Each card shows:
 
-- Tool name (e.g. “Qidi Temps”, “Voron Temps”, your custom labels)
+- Tool name (e.g. "Qidi Temps", "Voron Temps", your custom labels)
 - Status badge: **Stopped**, **Running**, **Error**, etc.
 - Buttons:
-  - **Start / Run** – launches the script in the shared `venv` using
+  - **Start / Run**: launches the script in the shared `venv` using
     `QProcess`
-  - **Stop** – sends a polite terminate, then escalates to a kill quickly if needed
-  - **Open log** – opens the latest log file created via
+  - **Stop**: sends a polite terminate, then escalates to a kill quickly if needed
+  - **Open log**: opens the latest log file created via
     `AppSpec.log_path`
-  - **Open folder** – opens the underlying project directory in your file
+  - **Open folder**: opens the underlying project directory in your file
     manager
 
 The top bar provides:
 
-- **Start all / Stop all** – bulk control over all tools at once; the buttons
+- **Start all / Stop all**: bulk control over all tools at once; the buttons
   enable/disable themselves based on whether any tools are running.
-- **Open all logs** – opens each tool’s log file
-- **Clear log** – clears the live log pane
-- **☀ / 🌙** – switches between light and dark themes (see
+- **Open all logs**: opens each tool's log file
+- **Clear log**: clears the live log pane
+- **☀ / 🌙**: switches between light and dark themes (see
   `MainWindow.set_theme()`)
 
-The right‑hand pane shows merged live output from all running tools. Each line
+The right-hand pane shows merged live output from all running tools. Each line
 is prefixed with the tool name by
 `MainWindow.append_log()`. Long lines automatically wrap
 within the log view so they never run off the side of the window.
@@ -258,7 +274,7 @@ quickly start whichever tools you need.
 
 ## 8. Building the executable yourself
 
-Most users should only ever need the pre‑built `.exe` from GitHub Releases.
+Most users should only ever need the pre-built `.exe` from GitHub Releases.
 
 If you want to build or modify the launcher from source (for example to tweak
 styling in [`styles.py`](styles.py) or change which tools are launched by

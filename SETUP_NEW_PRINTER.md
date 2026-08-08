@@ -18,7 +18,7 @@ https://github.com/oernster/VT350 but the patterns below work regardless of
 where your printer configs live.
 
 
-## 0. Quick start (non‑programmers): add a new printer card (no code)
+## 0. Quick start (non-programmers): add a new printer card (no code)
 
 If you just want the launcher to talk to another printer, you usually **do not**
 need to edit any Python or HTML.
@@ -54,7 +54,7 @@ All dashboards follow the same pattern:
    and updates the DOM.
 
 The dashboard web pages themselves are served locally by a production WSGI
-server (Waitress) rather than Flask’s development server.
+server (Waitress) rather than Flask's development server.
 
 When you add or rename a sensor, you must keep **Python JSON keys** and
 **JavaScript lookups** in sync.
@@ -63,7 +63,7 @@ When you add or rename a sensor, you must keep **Python JSON keys** and
 ## 1.1 How to find the *correct* sensor names (beginner-friendly)
 
 The most common reason a dashboard shows blanks is: the code is asking Moonraker
-for a sensor name that your printer doesn’t have.
+for a sensor name that your printer doesn't have.
 
 You have two easy ways to discover the right names:
 
@@ -72,7 +72,7 @@ You have two easy ways to discover the right names:
 1. Open Mainsail/Fluidd.
 2. Go to the **Temperature** section.
 3. Note the names shown (for example: `extruder`, `heater_bed`, `chamber`, etc.).
-4. For any “extra” sensors you want (like Raspberry Pi temperature, enclosure,
+4. For any "extra" sensors you want (like Raspberry Pi temperature, enclosure,
    electronics bay), note the exact label/name that appears.
 
 ### Option B: ask Moonraker directly (copy/paste into a browser)
@@ -84,11 +84,11 @@ If your Moonraker is reachable on your network, open this in a browser:
 This returns a big list of all object names Moonraker knows about. You can then
 use those exact object names in the dashboard configuration.
 
-If you’re not sure which objects are “temperatures”: look for names starting
+If you're not sure which objects are "temperatures": look for names starting
 with `temperature_sensor`, `heater_`, `extruder`, `temperature_fan`, etc.
 
 
-## 2. Qidi temps – configuring sensors
+## 2. Qidi temps: configuring sensors
 
 Backend: `qidi-temps/app.PrinterDataService` in [`qidi-temps/app.py`](qidi-temps/app.py)
 
@@ -114,7 +114,7 @@ class PrinterDataService:
 
 Key points:
 
-- `sensor.name` must match the object name in Moonraker’s
+- `sensor.name` must match the object name in Moonraker's
   `printer.objects.query` API, for example:
   - `extruder`
   - `heater_bed`
@@ -143,9 +143,9 @@ this.temperatureElements = {
 
 The keys in `temperatureElements` **must match** the JSON keys from Python.
 
-### Removing sensors you don’t have (Qidi)
+### Removing sensors you don't have (Qidi)
 
-If you don’t have a sensor listed in `self.temperature_sensors`, just delete
+If you don't have a sensor listed in `self.temperature_sensors`, just delete
 that line from the list in [`qidi-temps/app.py`](qidi-temps/app.py). For example,
 if you do not have a chamber sensor, remove the `heater_generic chamber` entry.
 
@@ -153,7 +153,7 @@ if you do not have a chamber sensor, remove the `heater_generic chamber` entry.
 
 Say your Qidi has a `heater_generic enclosure` sensor you want to show.
 
-1. **Python – add the sensor config** in
+1. **Python: add the sensor config** in
    `PrinterDataService.__init__` in [`qidi-temps/app.py`](qidi-temps/app.py):
 
    ```python
@@ -162,7 +162,7 @@ Say your Qidi has a `heater_generic enclosure` sensor you want to show.
    )
    ```
 
-2. **HTML – add a new card** in
+2. **HTML: add a new card** in
    [`qidi-temps/templates/index.html`](qidi-temps/templates/index.html):
 
    ```html
@@ -172,7 +172,7 @@ Say your Qidi has a `heater_generic enclosure` sensor you want to show.
    </div>
    ```
 
-3. **JS – map the JSON key to that element** inside
+3. **JS: map the JSON key to that element** inside
    `DashboardUIManager`:
 
    ```javascript
@@ -188,9 +188,9 @@ No other changes are needed; the existing `updateTemperatures()` logic will
 pick it up.
 
 
-## 3. Voron / Klipper temps – configuring sensors
+## 3. Voron / Klipper temps: configuring sensors
 
-## 3.0 How to set up *your* Klipper printer from *your* `printer.cfg` (step‑by‑step)
+## 3.0 How to set up *your* Klipper printer from *your* `printer.cfg` (step-by-step)
 
 If you are new to Klipper: you do **not** need to guess sensor names.
 Everything the dashboard can show comes from your Klipper configuration.
@@ -225,14 +225,14 @@ pin: ...
 sensor_type: temperature_mcu
 ```
 
-### Step 3: Convert those sections into dashboard “sensor names”
+### Step 3: Convert those sections into dashboard "sensor names"
 
 The dashboard pulls data through Moonraker and Moonraker uses specific object
 names.
 
 1. **`[temperature_sensor NAME]`**
    - Moonraker object name becomes: `temperature_sensor NAME`
-   - In this repo’s Voron dashboard, you add **only the `NAME` part** into the
+   - In this repo's Voron dashboard, you add **only the `NAME` part** into the
      Python list `temperature_sensor_variables`.
    - Example: if your config contains `[temperature_sensor Chamber]`, add
      `"Chamber"` to `temperature_sensor_variables` in
@@ -273,7 +273,7 @@ The Voron dashboard has **two places** you may need to update:
      [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html).
 
 If you only change Python but not the HTML, the new value may be available in
-`/temperatures` but won’t appear on the overlay until you add an element for it.
+`/temperatures` but won't appear on the overlay until you add an element for it.
 
 Backend: `VoronTemps/app.PrinterDataFetcher` in [`VoronTemps/app.py`](VoronTemps/app.py)
 
@@ -297,9 +297,9 @@ class PrinterDataFetcher:
 
 There are **two groups** here:
 
-1. `temperature_sensors` – “standard” Moonraker objects (`extruder`,
+1. `temperature_sensors`: "standard" Moonraker objects (`extruder`,
    `heater_bed`, `temperature_fan MCU_Fans`, etc.).
-2. `temperature_sensor_variables` – names of Klipper `temperature_sensor`
+2. `temperature_sensor_variables`: names of Klipper `temperature_sensor`
    objects you have defined in your `printer.cfg`, such as `temperature_sensor
    CHAMBER`.
 
@@ -348,8 +348,8 @@ Again, the keys in `temperatureElements` must match the JSON keys from
 The names `Internals`, `NucBox`, `NH36`, `Cartographer` are **my personal
 examples**. Your printer probably does not have these.
 
-If you leave names in this list that don’t exist on your printer, the dashboard
-won’t break but those sensors will show as `N/A` (or appear blank).
+If you leave names in this list that don't exist on your printer, the dashboard
+won't break but those sensors will show as `N/A` (or appear blank).
 
 ### Simplest safe setup (Voron/Klipper)
 
@@ -363,7 +363,7 @@ If you want a minimal dashboard that works for most Klipper printers:
 3. Empty `temperature_sensor_variables` unless you have custom
    `[temperature_sensor ...]` sections in your `printer.cfg`.
 
-That gives you a reliable “Extruder + Bed” overlay.
+That gives you a reliable "Extruder + Bed" overlay.
 
 ### If you want extra sensors (Voron/Klipper)
 
@@ -414,7 +414,7 @@ sensor_type: Generic 3950
 sensor_pin: ...
 ```
 
-1. **Python – add `Toolhead` to the variables list** in
+1. **Python: add `Toolhead` to the variables list** in
    [`VoronTemps/app.py`](VoronTemps/app.py):
 
    ```python
@@ -430,7 +430,7 @@ sensor_pin: ...
 
    The JSON from `/temperatures` will then include a `"Toolhead"` key.
 
-2. **HTML – add a matching block** in
+2. **HTML: add a matching block** in
    [`VoronTemps/templates/index.html`](VoronTemps/templates/index.html):
 
    ```html
@@ -441,7 +441,7 @@ sensor_pin: ...
    </div>
    ```
 
-3. **JS – register the element** in the `DashboardUIManager` mapping:
+3. **JS: register the element** in the `DashboardUIManager` mapping:
 
    ```javascript
    this.temperatureElements = {
@@ -530,7 +530,7 @@ If you want a completely separate overlay (e.g. for a second Voron):
    - Change the visible labels to match your new sensors.
    - Ensure the JS key names match the JSON keys from your modified backend.
 
-4. Register the new tool in the launcher using the “Manage printers / tools”
+4. Register the new tool in the launcher using the "Manage printers / tools"
    dialog (or by editing `tools_config.json` directly), pointing `project_dir`
    to your new folder and `script` to your Flask app.
 
@@ -546,11 +546,11 @@ dashboard folders just to add another Klipper printer. Instead you can:
 
 - The overlay URLs you put into your browser/OBS are **HTTP**, e.g.
   `http://127.0.0.1:5001/` (not `https://`).
-- If a dashboard shows “live” values even after you press Stop in the launcher,
+- If a dashboard shows "live" values even after you press Stop in the launcher,
   it means a process is still bound to that local port.
 
 Only create a new dashboard folder when the HTML or the set of sensors for a
 printer is fundamentally different from the existing dashboards (for example if
-you want a completely different overlay layout for a non‑Voron printer).
+you want a completely different overlay layout for a non-Voron printer).
 
 
