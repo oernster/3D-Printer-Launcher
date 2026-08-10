@@ -27,6 +27,14 @@ own Python virtual environment, shows live log output and gives quick access
 to log files and project folders. The list of printers/tools and their
 Moonraker settings is now fully configurable from the UI.
 
+The launcher also checks for updates: shortly after launch and once a day
+while running, it asks GitHub anonymously whether a newer published release
+exists, with Tools > Check for updates doing the same on demand. If one is
+found you choose Download, Skip this version or Later; a skipped version
+never prompts again and a failed check stays silent. Beyond that check and
+the Moonraker traffic on your own network, the launcher makes no other
+outbound calls.
+
 End-users are expected to download the pre-built `.exe` from this repository's
 GitHub Releases page. Building the executable from source is optional and is
 documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md).

@@ -468,7 +468,8 @@
         </div>
 
         <p class="minor-detail">
-            Free and open source. Runs locally. Talks to your printers over the Moonraker API on your own network.
+            Free and open source. Runs locally. Talks to your printers over the Moonraker API on your own network;
+            its one outbound call is an anonymous daily check of GitHub releases for a newer version.
         </p>
     </header>
 
@@ -650,6 +651,10 @@
                     <p>Yes. Give each enabled printer a unique dashboard port, start as many as you like and add one OBS Browser Source per printer.</p>
                 </div>
                 <div class="faq-item">
+                    <h3>Does it phone home?</h3>
+                    <p>Almost nothing. Beyond the Moonraker traffic on your own network, its one outbound call is an anonymous daily ask of GitHub releases for whether a newer version exists, also available on demand from Tools &gt; Check for updates. You choose Download, Skip this version or Later; a failed check stays silent.</p>
+                </div>
+                <div class="faq-item">
                     <h3>Does it run on Linux or macOS?</h3>
                     <p>The launcher is built and shipped for Windows. The source includes Nuitka build scripts for several Linux distributions and macOS if you want to build it yourself; see <a href="https://github.com/oernster/3D-Printer-Launcher/blob/main/DEVELOPMENT_README.md">DEVELOPMENT_README.md</a>.</p>
                 </div>
@@ -730,6 +735,7 @@
                 "UI-based printer and Moonraker configuration, no code required",
                 "Local HTTP dashboards embeddable in OBS Studio as Browser Sources",
                 "Light and dark themes",
+                "In-app update check with download, skip and daily re-check",
                 "Free and open source under LGPL-3.0"
             ]
         },
@@ -756,6 +762,11 @@
                     "@type": "Question",
                     "name": "Can I show more than one printer at once?",
                     "acceptedAnswer": { "@type": "Answer", "text": "Yes. Give each enabled printer a unique dashboard port, start as many as you like and add one OBS Browser Source per printer." }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does it phone home?",
+                    "acceptedAnswer": { "@type": "Answer", "text": "Almost nothing. Beyond the Moonraker traffic on your own network, its one outbound call is an anonymous daily ask of GitHub releases for whether a newer version exists, also available on demand from Tools > Check for updates. You choose Download, Skip this version or Later; a failed check stays silent." }
                 },
                 {
                     "@type": "Question",

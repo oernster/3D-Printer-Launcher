@@ -174,8 +174,11 @@ class MainWindow(QMainWindow):
         root.addWidget(splitter)
         self.setCentralWidget(central)
 
-        # Menu
+        # Menu. Kept as an attribute so the entrypoint's update-check
+        # installer can add its entry without this module importing it.
         menu = self.menuBar().addMenu("Tools")
+        self.tools_menu = menu
+        self.update_controller = None
 
         act_open_dev = QAction("Open Development folder", self)
         act_open_dev.triggered.connect(self.open_dev_folder)

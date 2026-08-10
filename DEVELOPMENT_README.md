@@ -17,6 +17,8 @@ the launcher executable themselves. End-users can simply download the latest
 - Tools/printers management dialog: [`manage_tools_dialog.py`](manage_tools_dialog.py)
 - The dialog's per-entry editor form: [`tool_form.py`](tool_form.py)
 - Webcam helper credentials file handling: [`webcam_credentials.py`](webcam_credentials.py)
+- Update check, Qt-free half (version logic, GitHub adapter, skip persistence): [`update_check.py`](update_check.py)
+- Update check, Qt half (timers, worker thread, prompt, Tools menu entry): [`update_check_ui.py`](update_check_ui.py); installed by the entrypoint only, so windows built in tests never start timers or touch the network
 - Shared styling: [`styles.py`](styles.py)
 - Nuitka build helper script: [`build_nuitka.py`](build_nuitka.py)
 - Windows build wrapper, delegates to the above: [`build_nuitka.cmd`](build_nuitka.cmd)

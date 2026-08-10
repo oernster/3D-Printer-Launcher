@@ -8,7 +8,7 @@ whole repository: the launcher at root, the three bundled tools
 (`VoronTemps/`, `qidi-temps/`, `qidiwebcamdrestart/`), the build scripts and
 the GitHub Pages site under `docs/`.
 
-This is a small project (roughly 2,600 lines across sixteen modules, plus a
+This is a small project (roughly 3,400 lines across nineteen modules, plus a
 test suite). It has a `VERSION` file read by both the application and the build
 scripts, a `pytest` suite covering the configuration and Moonraker logic, an
 offscreen smoke test over the Qt layer, a structural size rule, a
