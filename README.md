@@ -35,7 +35,7 @@ outbound calls.
 
 End-users are expected to download the pre-built `.exe` from this repository's
 GitHub Releases page. Building the executable from source is optional and is
-documented separately in [`DEVELOPMENT_README.md`](DEVELOPMENT_README.md).
+documented separately in [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
 See [`TECH_DEBT.md`](TECH_DEBT.md) for what is still open, what is deliberately left and what
 only looks like debt.
@@ -285,7 +285,7 @@ Most users should only ever need the pre-built `.exe` from GitHub Releases.
 If you want to build or modify the launcher from source (for example to tweak
 styling in [`styles.py`](styles.py) or change which tools are launched by
 default), see the full developer guide in
-[`DEVELOPMENT_README.md`](DEVELOPMENT_README.md). That document covers the
+[`DEVELOPMENT.md`](DEVELOPMENT.md). That document covers the
 Nuitka build setup (via [`build_nuitka.py`](build_nuitka.py) or
 [`build_nuitka.cmd`](build_nuitka.cmd)) and the expected folder layout for
 releasing your own executables.

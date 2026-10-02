@@ -31,7 +31,7 @@ not covered again.
 - `app_spec.py` at root beside the Nuitka scripts. Packaging metadata.
 - The three `.gitignore` files (root plus subdirectories). Each covers its own
   tool's artefacts.
-- `SETUP_NEW_PRINTER.md` alongside `DEVELOPMENT_README.md`. Distinct subjects:
+- `SETUP_NEW_PRINTER.md` alongside `DEVELOPMENT.md`. Distinct subjects:
   one is for users adding a printer, one is for building.
 - The tracked PNGs plus the `.ico` files. Icon assets for the launcher and the
   site.

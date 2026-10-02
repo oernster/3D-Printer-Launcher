@@ -1,7 +1,7 @@
 name: Gate
 
 # The project's four verification commands, run by something other than
-# someone remembering to. The same list is documented in DEVELOPMENT_README.md
+# someone remembering to. The same list is documented in DEVELOPMENT.md
 # section 1.2; if one changes, change the other.
 
 on:
