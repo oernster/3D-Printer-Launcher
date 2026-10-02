@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>3D-Printer-Launcher: One window for your Klipper temperature dashboards | Windows, OBS-ready</title>
-    <meta name="description" content="A small Windows launcher that starts your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window. Live logs, per-printer config, OBS Browser Source overlays. Free and open source.">
+    <title>3D-Printer-Launcher features: the launcher, its tools and OBS overlays</title>
+    <meta name="description" content="What 3D-Printer-Launcher does: one card per tool with live merged logs, the three bundled printer helpers and local dashboards ready for OBS Browser Sources.">
     <meta name="keywords" content="3D printer launcher, Klipper temperature dashboard, Moonraker, Voron temps, Qidi temps, OBS browser source, printer temperature overlay, PySide6 launcher, Waitress Flask dashboard, 3D printing OBS overlay, free open source printer tool">
     <meta name="author" content="Oliver Ernster">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="https://ernster.dev/3D-Printer-Launcher/">
+    <link rel="canonical" href="https://ernster.dev/3D-Printer-Launcher/features.html">
 
     <!-- Theme / app identity -->
     <meta name="theme-color" content="#0B0E14">
@@ -28,22 +28,22 @@
     <link rel="apple-touch-icon" href="filament-180.png">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="3D-Printer-Launcher: one window for your Klipper temperature dashboards">
-    <meta property="og:description" content="Start your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays. Free and open source.">
+    <meta property="og:title" content="3D-Printer-Launcher features: the launcher, its tools and OBS overlays">
+    <meta property="og:description" content="What 3D-Printer-Launcher does: one card per tool with live merged logs, the three bundled printer helpers and local dashboards ready for OBS Browser Sources.">
     <meta property="og:image" content="https://ernster.dev/3D-Printer-Launcher/filament-512.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
     <meta property="og:image:alt" content="3D-Printer-Launcher app icon">
-    <meta property="og:url" content="https://ernster.dev/3D-Printer-Launcher/">
+    <meta property="og:url" content="https://ernster.dev/3D-Printer-Launcher/features.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="3D-Printer-Launcher">
     <meta property="og:locale" content="en_GB">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="3D-Printer-Launcher: one window for your Klipper temperature dashboards">
-    <meta name="twitter:description" content="Start your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays.">
+    <meta name="twitter:title" content="3D-Printer-Launcher features: the launcher, its tools and OBS overlays">
+    <meta name="twitter:description" content="What 3D-Printer-Launcher does: one card per tool with live merged logs, the three bundled printer helpers and local dashboards ready for OBS Browser Sources.">
     <meta name="twitter:image" content="https://ernster.dev/3D-Printer-Launcher/filament-512.png">
     <meta name="twitter:image:alt" content="3D-Printer-Launcher app icon">
 
@@ -486,76 +486,97 @@
 <body>
 
 <nav class="site-nav" aria-label="Site">
-    <a class="nav-brand" href="./" aria-current="page">
+    <a class="nav-brand" href="./">
         <img src="filament-64.png" width="28" height="28" alt="">
         <span>3D-Printer-Launcher</span>
     </a>
     <div class="nav-links">
-        <a href="features.html">Features</a>
+        <a href="features.html" aria-current="page">Features</a>
         <a href="why.html">Why</a>
         <a href="download.html">Download</a>
     </div>
 </nav>
 
-<div class="container">
+<div class="container page">
 
-    <header class="hero">
-        <img src="filament-512.png" class="hero-icon" width="176" height="176"
-             alt="3D-Printer-Launcher app icon" fetchpriority="high" decoding="async">
-
-        <div class="badge"><span class="badge-dot"></span> Windows desktop · Klipper / Moonraker · OBS-ready</div>
-
-        <h1>3D-Printer-Launcher</h1>
-
-        <p class="subtitle">
-            One window that starts your printer helper tools, your Qidi and Voron/Klipper
-            <strong style="color:var(--text)">temperature dashboards</strong> and a webcam restart helper,
-            shows their live logs side by side and serves each dashboard as a local page you can drop
-            straight into OBS.
-        </p>
-
-        <div class="actions">
-            <a class="primary" href="download.html">Download</a>
-            <a class="secondary" href="https://github.com/oernster/3D-Printer-Launcher">View source</a>
-        </div>
-
-        <p class="minor-detail">
-            Free and open source. Runs locally. Talks to your printers over the Moonraker API on your own network;
-            its one outbound call is an anonymous daily check of GitHub releases for a newer version.
-        </p>
+    <header>
+        <h1>Features</h1>
+        <p class="subtitle">Everything the launcher does in one place: the window and its controls, the three tools that ship in the box and the dashboards it serves for OBS.</p>
     </header>
 
     <main>
 
-        <section class="pitch" aria-label="What makes 3D-Printer-Launcher useful">
-            <p>
-                A printer stream needs its temperatures on screen and a couple of helper scripts on hand.
-                Doing that by hand means <em>juggling terminals, virtual environments and ports every session</em>.
-                3D-Printer-Launcher turns all of it into <strong>one window with a Start button per tool</strong>.
-            </p>
+        <!-- What it does -->
+        <section class="section" id="features" aria-labelledby="features-h">
+            <h2 id="features-h">What the launcher does</h2>
+            <p class="lead">A single windowed app (PySide6/Qt) that runs each tool in its own environment and keeps you out of the terminal.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>One card per tool</h3>
+                    <p>Every printer helper gets a card with a status badge (Stopped, Running, Error) and Start, Stop, Open log and Open folder buttons.</p>
+                </div>
+                <div class="card">
+                    <h3>Live merged logs</h3>
+                    <p>A single pane shows output from every running tool, each line prefixed with the tool it came from and wrapped so nothing runs off the side.</p>
+                </div>
+                <div class="card">
+                    <h3>Start all, stop all</h3>
+                    <p>Bulk controls bring every dashboard up or down at once. The buttons enable and disable themselves based on what is running.</p>
+                </div>
+                <div class="card">
+                    <h3>Add printers from the UI</h3>
+                    <p>The Manage dialog edits printers and tools with no code: label, project folder, script, Moonraker host and port, dashboard port and tool kind.</p>
+                </div>
+                <div class="card">
+                    <h3>Moonraker under the hood</h3>
+                    <p>Host and port are combined into the Moonraker query URL and passed to each dashboard, so a printer move is a field edit, not a code change.</p>
+                </div>
+                <div class="card">
+                    <h3>Light and dark themes</h3>
+                    <p>A one-click theme toggle in the top bar, so the launcher matches the rest of your streaming setup.</p>
+                </div>
+            </div>
         </section>
 
-        <!-- Screenshot -->
-        <section class="section" id="screenshot" aria-labelledby="screenshot-h">
-            <h2 id="screenshot-h" class="sr-only">The launcher window</h2>
-            <figure class="shot">
-                <img src="screenshot-launcher.png"
-                     width="1314" height="751" loading="lazy" decoding="async"
-                     alt="The 3D-Printer-Launcher main window: one card per tool with status badges and Start, Stop, Open log and Open folder buttons, beside a merged live log pane on the right.">
-                <figcaption>One card per tool, live merged logs on the right, a light/dark toggle in the top bar.</figcaption>
-            </figure>
+        <!-- The bundled tools -->
+        <section class="section" id="tools" aria-labelledby="tools-h">
+            <h2 id="tools-h">The tools it launches</h2>
+            <p class="lead">Three helpers ship in the box; add your own printers alongside them from the UI.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>Qidi temperature dashboard</h3>
+                    <p>A Flask app served by Waitress that renders live Qidi printer temperatures as a local web page.</p>
+                </div>
+                <div class="card">
+                    <h3>Voron / Klipper temperature dashboard</h3>
+                    <p>The same dashboard for any Voron or generic Klipper printer reachable over Moonraker. Run several at once on different ports.</p>
+                </div>
+                <div class="card">
+                    <h3>Qidi webcam restart helper</h3>
+                    <p>A one-shot SSH helper that restarts <code>webcamd</code> on a Qidi when the camera feed drops, with the single Run action a one-shot tool shows.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- OBS -->
+        <section class="section" id="obs" aria-labelledby="obs-h">
+            <h2 id="obs-h">Built for OBS overlays</h2>
+            <div class="prose">
+                <p>
+                    Each dashboard is a plain local <strong>HTTP</strong> page on its own port, so it drops straight into
+                    OBS Studio as a <strong>Browser Source</strong>. Add one source per printer, size it to a thin bar
+                    across the bottom of your canvas and your temperatures sit on the stream.
+                </p>
+                <p>
+                    Give every enabled printer a unique dashboard port and you can run and overlay several printers
+                    side by side. Always use <code>http://</code> URLs, not <code>https://</code>.
+                </p>
+            </div>
         </section>
 
     </main>
-
-    <p class="sr-only">
-        3D-Printer-Launcher is a free, open-source Windows desktop launcher for 3D-printing helper tools. It starts
-        a Qidi temperature dashboard, a Voron or generic Klipper temperature dashboard and a Qidi webcam restart
-        helper from a single PySide6 window, showing merged live logs and per-tool Start, Stop, Open log and Open
-        folder controls. Printers and tools are configured from the UI over the Moonraker HTTP API. Each dashboard
-        is served as a local HTTP page that can be embedded in OBS Studio as a Browser Source overlay. Released
-        under the LGPL-3.0 licence.
-    </p>
 
     <footer>
         <nav class="footer-links" aria-label="Pages">
@@ -577,58 +598,14 @@
     "@context": "https://schema.org",
     "@graph": [
         {
-            "@type": "WebSite",
-            "@id": "https://ernster.dev/3D-Printer-Launcher/#website",
-            "url": "https://ernster.dev/3D-Printer-Launcher/",
-            "name": "3D-Printer-Launcher",
-            "description": "A small Windows launcher that starts your Qidi and Voron/Klipper temperature dashboards and a webcam restart helper from one window, with live logs and OBS-ready overlays.",
+            "@type": "WebPage",
+            "@id": "https://ernster.dev/3D-Printer-Launcher/features.html#webpage",
+            "url": "https://ernster.dev/3D-Printer-Launcher/features.html",
+            "name": "3D-Printer-Launcher features: the launcher, its tools and OBS overlays",
+            "description": "What 3D-Printer-Launcher does: one card per tool with live merged logs, the three bundled printer helpers and local dashboards ready for OBS Browser Sources.",
             "inLanguage": "en-GB",
-            "publisher": { "@id": "https://ernster.dev/3D-Printer-Launcher/#oliver" }
-        },
-        {
-            "@type": "Person",
-            "@id": "https://ernster.dev/3D-Printer-Launcher/#oliver",
-            "name": "Oliver Ernster",
-            "url": "https://www.crankthecode.com",
-            "sameAs": [
-                "https://github.com/oernster",
-                "https://www.crankthecode.com"
-            ]
-        },
-        {
-            "@type": "SoftwareApplication",
-            "@id": "https://ernster.dev/3D-Printer-Launcher/#app",
-            "name": "3D-Printer-Launcher",
-            "applicationCategory": "UtilitiesApplication",
-            "applicationSubCategory": "3D printing dashboard launcher and OBS overlay server",
-            "operatingSystem": "Windows",
-            "description": "A PySide6 desktop launcher that starts Qidi and Voron/Klipper temperature dashboards and a Qidi webcam restart helper from one window, with merged live logs, UI-based Moonraker configuration and OBS Browser Source overlays.",
-            "url": "https://ernster.dev/3D-Printer-Launcher/",
-            "downloadUrl": "https://github.com/oernster/3D-Printer-Launcher/releases",
-            "installUrl": "https://github.com/oernster/3D-Printer-Launcher/releases",
-            "releaseNotes": "https://github.com/oernster/3D-Printer-Launcher/releases",
-            "softwareHelp": "https://github.com/oernster/3D-Printer-Launcher#readme",
-            "inLanguage": "en-GB",
-            "image": "https://ernster.dev/3D-Printer-Launcher/filament-512.png",
-            "isAccessibleForFree": true,
-            "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
-            "author": { "@id": "https://ernster.dev/3D-Printer-Launcher/#oliver" },
-            "creator": { "@id": "https://ernster.dev/3D-Printer-Launcher/#oliver" },
-            "publisher": { "@id": "https://ernster.dev/3D-Printer-Launcher/#oliver" },
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
-            "featureList": [
-                "One window that launches multiple 3D-printing helper tools",
-                "Qidi temperature dashboard",
-                "Voron and generic Klipper temperature dashboard over Moonraker",
-                "Qidi webcam restart helper",
-                "Merged live log output with per-tool prefixes",
-                "Start all and stop all bulk controls",
-                "UI-based printer and Moonraker configuration, no code required",
-                "Local HTTP dashboards embeddable in OBS Studio as Browser Sources",
-                "Light and dark themes",
-                "In-app update check with download, skip and daily re-check",
-                "Free and open source under LGPL-3.0"
-            ]
+            "isPartOf": { "@id": "https://ernster.dev/3D-Printer-Launcher/#website" },
+            "about": { "@id": "https://ernster.dev/3D-Printer-Launcher/#app" }
         }
     ]
 }
