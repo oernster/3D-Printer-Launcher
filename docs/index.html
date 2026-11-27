@@ -480,7 +480,10 @@
             white-space: nowrap;
             border: 0;
         }
-    </style>
+    /* site-chrome-guard: a link in the top bar or footer never breaks inside itself; rows wrap
+   whole links instead and no bar is held to a fixed height. */
+footer a { white-space: nowrap; }
+</style>
 <script>window.goatcounter = {path: function (p) { return location.host + p }}</script>
 <script data-goatcounter="https://oernster.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
